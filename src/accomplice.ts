@@ -42,16 +42,16 @@ export default class Accomplice extends Client {
 
     public async start(): Promise<Accomplice> {
         // Setup redis, perform quick write check
+        const uniqueKey = uuidv4()
         await this.redis.connect()
-        const redisTestValue = uuidv4()
-        await this.redis.set(`${redisPrefix}redis_test`, redisTestValue)
+        await this.redis.set(`${redisPrefix}${uniqueKey}_test`, 'success')
         const redisValue: string | null = await this.redis.get(
-            `${redisPrefix}redis_test`
+            `${redisPrefix}${uniqueKey}_test`
         )
-        if (!redisValue || redisValue === redisTestValue) {
+        if (!redisValue || redisValue !== 'success') {
             throw new Error('Redis check failed')
         }
-        await this.redis.del(`${redisPrefix}redis_test`)
+        await this.redis.del(`${redisPrefix}${uniqueKey}_test`)
         // await this.redis.disconnect() // Is it better practice to leave redis connected?
 
         // TODO: Can we make this stricter?
@@ -70,7 +70,7 @@ export default class Accomplice extends Client {
                         const eventHandle: EventHandle = new EventHandle()
 
                         this.logger.info(
-                            `Registering event handle: Name: "${eventHandle.name}" ; Description: "${eventHandle.description}" ; Fire Once: ${eventHandle.fireOnce}`
+                            `[Register] Name: "${eventHandle.name}" ; Description: "${eventHandle.description}" ; Fire Once: ${eventHandle.fireOnce}`
                         )
 
                         if (eventHandle.fireOnce) {
