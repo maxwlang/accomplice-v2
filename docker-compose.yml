@@ -1,0 +1,77 @@
+version: '3.1'
+
+volumes:
+  mariadb:
+  redisinsight:
+
+services:
+  redis:
+    image: redislabs/redis:latest
+    hostname: redis
+    container_name: redis
+    restart: always
+    command: redis-server --save 20 1 --loglevel warning
+    ports:
+      - 6379:6379
+
+  mariadb:
+    image: mariadb:latest
+    hostname: mariadb
+    container_name: mariadb
+    restart: always
+    environment:
+      MARIADB_USER: accomplice
+      MARIADB_PASSWORD: accomplice
+      MARIADB_ROOT_PASSWORD: accomplice
+    ports:
+      - 3306:3306
+    volumes:
+      - mariadb:/var/lib/mysql
+
+  redisinsight:
+    image: redislabs/redisinsight:latest
+    depends_on:
+      - redis
+    hostname: redisinsight
+    container_name: redisinsight
+    restart: always
+    environment:
+      MARIADB_USER: accomplice
+      MARIADB_PASSWORD: accomplice
+      MARIADB_ROOT_PASSWORD: accomplice
+    ports:
+      - 8001:8001
+    volumes:
+      - redisinsight:/db
+
+  adminer:
+    image: adminer:latest
+    depends_on:
+      - mariadb
+    hostname: adminer
+    container_name: adminer
+    restart: always
+    environment:
+      ADMINER_DEFAULT_DB_HOST: 'mariadb'
+    ports:
+      - 8080:8080
+
+  accomplice:
+    hostname: accomplice
+    container_name: accomplice
+    build:
+      context: ./
+      target: production
+    image: accomplice
+    depends_on:
+      - redis
+      - mariadb
+    environment:
+      NODE_ENV: production
+      DB_HOST: mariadb
+      DB_PORT: 3306
+      DB_USER: accomplice
+      DB_PASSWORD: accomplice
+      DB_NAME: accomplice
+      DISCORD_TOKEN: MTA0NTE1MDc2OTM4MjQyNDU4Ng.G-b-f5.FYvO7sRjsBGxDE1ZJqsKcFQ7CKiR0-NtWaNYuY
+      REDIS_URL: redis://redis:6379
