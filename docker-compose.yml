@@ -6,11 +6,11 @@ volumes:
 
 services:
   redis:
-    image: redislabs/redis:latest
+    image: redis:latest
     hostname: redis
     container_name: redis
     restart: always
-    command: redis-server --save 20 1 --loglevel warning
+    command: redis-server --save 60 1 --loglevel warning
     ports:
       - 6379:6379
 
@@ -61,7 +61,6 @@ services:
     container_name: accomplice
     build:
       context: ./
-      target: production
     image: accomplice
     depends_on:
       - redis
@@ -73,5 +72,7 @@ services:
       DB_USER: accomplice
       DB_PASSWORD: accomplice
       DB_NAME: accomplice
-      DISCORD_TOKEN: MTA0NTE1MDc2OTM4MjQyNDU4Ng.G-b-f5.FYvO7sRjsBGxDE1ZJqsKcFQ7CKiR0-NtWaNYuY
       REDIS_URL: redis://redis:6379
+      DISCORD_TOKEN: MTA0NTE1MDc2OTM4MjQyNDU4Ng.G-b-f5.FYvO7sRjsBGxDE1ZJqsKcFQ7CKiR0-NtWaNYuY
+      DISCORD_ACTIVITY_REFRESH_INTERVAL: 60
+      LOG_LEVEL: info
