@@ -13,3 +13,6 @@
         
     - /starboard show channel: #channel-name - Returns a numbered list of starboards active in a channel
     - /starboard edit channel: #channel-name - Somehow edit starboards on a channel
+
+
+// Should allow both emote names (:bitch:) and emote snowflakes (1110380135984668763)
