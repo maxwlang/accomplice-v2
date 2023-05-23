@@ -1,9 +1,10 @@
 import { createLogger, format, transports } from 'winston'
 const { combine, colorize, printf, timestamp } = format
 import { mkdir } from 'fs/promises'
+import { logLevel } from '../config/winston'
 
 const logger = createLogger({
-    level: 'info',
+    level: logLevel,
     format: format.json(),
     transports: ((): Array<
         transports.FileTransportInstance | transports.ConsoleTransportInstance
