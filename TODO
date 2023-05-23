@@ -1,0 +1,15 @@
+- Slash commands
+    - /leaderboard add: :emote: - Adds a dropdown entry from emote leaderboards - Admin or group only?
+    - /leaderboard remove: :emote: - Removes a dropdown entry from emote leaderboards - Admin or group only?
+    - /starboard create channel: #channel-name emote: :emote: - Creates a starboard for an emote in a specific channel - Admin or group only?
+        - /starboard create -- with all possible params
+            channel: #channel-name
+            emote: :emote-name:
+            minReacts: 3
+            ignoreBots: true
+            ignoreUsers: false
+            ignoreSpecificUsers: @spammyWammy @LolzBoy (Maybe?)
+            adminReactsOnly: false (Maybe?)
+        
+    - /starboard show channel: #channel-name - Returns a numbered list of starboards active in a channel
+    - /starboard edit channel: #channel-name - Somehow edit starboards on a channel
