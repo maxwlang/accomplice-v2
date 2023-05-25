@@ -1,4 +1,4 @@
-Guilds # Represents servers
+Guilds # Represents servers [x]
 id - guid
 snowflake - snowflake
 isPriority - boolean (is user paying for service, results in quicker starboard?)
@@ -9,8 +9,6 @@ type - ENUM (Emoji, Custom, CustomGIF, CustomSuper, CustomSuperGIF)
 content - string (unicode emoji 😊 or snowflake)
 reacteeUserId - User who received react
 reactedUserId - User who reacted
-isReacteeBot - boolean - is the reactee user a bot account
-isReactedBot - boolean - Is the reacted user a bot account
 
 Starboards
 id - guid
@@ -23,19 +21,24 @@ minimumReacts - int
 removalThreshold - int (optional)
 react - string (unicode emoji 😊 or snowflake)
 
-Leaderboards # Represents a single embed in a channel
+Leaderboards # Represents a single embed in a channel [x]
 id - guid
 channel - snowflake of channel where it posts
+
+Trackers # Represents a page of the embed in a channel
+id - guid
+name - string (optional, 32 char, unique per guild)
+react - string (unicode emoji 😊 or snowflake)
+
+Users # Represents a user who has been reacted to or reacted [x]
+id - guid
+snowflake - snowflake
+isBot - boolean
 
 Leaderboards_Trackers # Represents a page of the embed in a channel
 id - guid
 leaderboardId - guid
-name - string (optional, 32 char, unique per guild)
-react - string (unicode emoji 😊 or snowflake)
-
-Users # Represents a user who has been reacted to or reacted
-id - guid
-snowflake - snowflake
+trackerId - guid
 
 Guilds_Reactions
 id - guid
