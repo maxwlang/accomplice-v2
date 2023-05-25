@@ -1,0 +1,55 @@
+Guilds # Represents servers
+id - guid
+snowflake - snowflake
+isPriority - boolean (is user paying for service, results in quicker starboard?)
+
+Reactions # Represents a react
+id - guid
+type - ENUM (Emoji, Custom, CustomGIF, CustomSuper, CustomSuperGIF)
+content - string (unicode emoji 😊 or snowflake)
+reacteeUserId - User who received react
+reactedUserId - User who reacted
+isReacteeBot - boolean - is the reactee user a bot account
+isReactedBot - boolean - Is the reacted user a bot account
+
+Starboards
+id - guid
+name - string (optional, 32 char, unique per guild)
+channel - snowflake of channel where it posts
+monitorChannel - snowflake of specific channel to monitor (optional)
+allowBotReacts - boolean
+allowReactedBots - boolean
+minimumReacts - int
+removalThreshold - int (optional)
+react - string (unicode emoji 😊 or snowflake)
+
+Leaderboards # Represents a single embed in a channel
+id - guid
+channel - snowflake of channel where it posts
+
+Leaderboards_Trackers # Represents a page of the embed in a channel
+id - guid
+leaderboardId - guid
+name - string (optional, 32 char, unique per guild)
+react - string (unicode emoji 😊 or snowflake)
+
+Users # Represents a user who has been reacted to or reacted
+id - guid
+snowflake - snowflake
+
+Guilds_Reactions
+id - guid
+guildId - Guild where reacted
+reactionId - Reaction
+
+Guilds_Starboards
+id - guid
+guildId - Guild where located
+starboardId - Starboard
+
+##
+
+Get top ten reacted users
+
+guildId = SELECT id FROM Guilds WHERE snowflake = '123456789012345'
+top10UserIds = SELECT reacteeUserId FROM Guilds_Reactions WHERE guildId = guildId GROUP BY reacteeUserId LIMIT 10 ORDER BY COUNT(reacteeUserId)
