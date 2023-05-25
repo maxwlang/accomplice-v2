@@ -1,0 +1,14 @@
+{
+  "production": {
+    "database": "accomplice",
+    "dialect": "sqlite",
+    "storage": "./data/database.db",
+    "logging": false
+  },
+  "development": {
+    "database": "accomplice",
+    "dialect": "sqlite",
+    "storage": "memory",
+    "logging": false
+  }
+}

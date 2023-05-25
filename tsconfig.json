@@ -1,6 +1,6 @@
 {
     "compilerOptions": {
-        "allowJs": false,
+        "allowJs": true,
         "allowSyntheticDefaultImports": true,
         "alwaysStrict": true,
         "declaration": true,
@@ -8,6 +8,8 @@
         "forceConsistentCasingInFileNames": true,
         "isolatedModules": false,
         "lib": ["es2021"],
+        "experimentalDecorators": true,
+        "emitDecoratorMetadata": true,
         "module": "CommonJS",
         "moduleResolution": "node",
         "noEmit": false,
@@ -25,5 +27,5 @@
         "outDir": "dist"
     },
     "exclude": ["node_modules", "dist"],
-    "include": ["src/*.ts", "src/**/*.ts", "test/*.ts", "test/**/*.ts"]
+    "include": ["src/*.ts", "src/**/*.ts", "test/*.ts", "test/**/*.ts", "src/sequelize/models/guild_reactions.js", "src/sequelize/models/guild_starboards.js", "src/sequelize/models/guild.js", "src/sequelize/models/leaderboard_trackers.js", "src/sequelize/models/leaderboard.js", "src/sequelize/models/reaction.js", "src/sequelize/models/starboard.js", "src/sequelize/models/users.js"]
 }
