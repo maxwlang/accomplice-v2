@@ -39,18 +39,18 @@ export default class StarboardCommand implements Command {
                         .setMinValue(1)
                         .setRequired(true)
                 )
+                .addStringOption(option =>
+                    option
+                        .setName('react')
+                        .setDescription('The reaction to watch for')
+                        .setRequired(true)
+                )
                 .addChannelOption(option =>
                     option
                         .setName('monitor-channel')
                         .setDescription(
                             'The channel to watch for reactions. Searches guild when not set.'
                         )
-                )
-                .addStringOption(option =>
-                    option
-                        .setName('react')
-                        .setDescription('The reaction to watch for')
-                        .setRequired(true)
                 )
                 .addIntegerOption(option =>
                     option
@@ -144,7 +144,6 @@ export default class StarboardCommand implements Command {
                         .setDescription(
                             'List only starboards in a specific channel'
                         )
-                        .setRequired(false)
                 )
         )
 
