@@ -7,7 +7,7 @@
   },
   "development": {
     "dialect": "sqlite",
-    "storage": ":memory:",
-    "logging": false
+    "storage": "./data/dev-database.db",
+    "logging": true
   }
 }

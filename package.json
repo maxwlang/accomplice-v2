@@ -17,7 +17,8 @@
     "dev": "yarn clean && yarn lint && yarn build && node dist/index.js",
     "clean": "rimraf dist/",
     "build": "tsc",
-    "lint": "eslint . --ext .ts"
+    "lint": "eslint . --ext .ts",
+    "migrate": "sequelize-cli db:migrate --env production --config ./src/sequelize/config/sequelize.json --seeders-path ./src/sequelize/seeders --models-path ./src/sequelize/models --migrations-path ./src/sequelize/migrations"
   },
   "devDependencies": {
     "@types/node": "^18.15.11",
@@ -35,6 +36,7 @@
     "eslint-plugin-promise": "^6.1.1",
     "prettier": "^2.8.7",
     "rimraf": "^5.0.0",
+    "sequelize-cli": "^6.6.0",
     "sqlite3": "^5.1.6",
     "typescript": "^5.0.4"
   }

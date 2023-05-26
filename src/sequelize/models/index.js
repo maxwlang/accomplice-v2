@@ -13,6 +13,7 @@ const sequelize = new Sequelize(config)
 
 fs.readdirSync(__dirname)
     .filter(file => {
+        console.log({ file })
         return (
             file.indexOf('.') !== 0 &&
             file !== basename &&
@@ -20,6 +21,7 @@ fs.readdirSync(__dirname)
         )
     })
     .forEach(file => {
+        console.log({ file2: file })
         const model = require(path.join(__dirname, file))(
             sequelize,
             Sequelize.DataTypes
@@ -34,6 +36,5 @@ Object.keys(db).forEach(modelName => {
 })
 
 db.sequelize = sequelize
-db.Sequelize = Sequelize
 
 module.exports = db

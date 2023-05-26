@@ -27,5 +27,5 @@
         "outDir": "dist"
     },
     "exclude": ["node_modules", "dist"],
-    "include": ["src/*.ts", "src/**/*.ts", "test/*.ts", "test/**/*.ts", "src/sequelize/config/sequelize.json", "src/sequelize/models/guild_reactions.js", "src/sequelize/models/guild_starboards.js", "src/sequelize/models/guild.js", "src/sequelize/models/leaderboard_trackers.js", "src/sequelize/models/leaderboard.js", "src/sequelize/models/reaction.js", "src/sequelize/models/starboard.js", "src/sequelize/models/users.js"]
+    "include": ["src/**/*", "tests/**/*", "src/sequelize/config/sequelize.json"]
 }
