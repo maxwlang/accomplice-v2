@@ -36,12 +36,12 @@ module.exports = (sequelize, DataTypes) => {
                 defaultValue: true
             },
             minimumReacts: {
-                type: DataTypes.INT,
+                type: DataTypes.INTEGER,
                 allowNull: false,
                 defaultValue: 3
             },
             removalThreshold: {
-                type: DataTypes.INT,
+                type: DataTypes.INTEGER,
                 allowNull: true
             },
             react: {
