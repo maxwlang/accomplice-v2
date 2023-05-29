@@ -1,10 +1,12 @@
 import { readdir } from 'fs/promises'
 import {
+    ChatInputCommandInteraction,
     Client,
     Collection,
     Events as DiscordEvents,
     Routes as DiscordRestRoutes,
     IntentsBitField,
+    OAuth2Guild,
     Partials,
     RESTPostAPIChatInputApplicationCommandsJSONBody
 } from 'discord.js'
@@ -17,7 +19,8 @@ import { v4 as uuidv4 } from 'uuid'
 import Command from './types/Command'
 
 export default class Accomplice extends Client {
-    constructor({ logger }: { logger: Logger }) {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    constructor({ logger, sequelize }: { logger: Logger; sequelize: any }) {
         super({
             intents: [
                 IntentsBitField.Flags.Guilds,
@@ -37,6 +40,7 @@ export default class Accomplice extends Client {
 
         this.redis = redisClient
         this.logger = logger
+        this.sequelize = sequelize
         this.commands = new Collection()
 
         // this.periodicSync = null
@@ -49,8 +53,11 @@ export default class Accomplice extends Client {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     public redis: RedisClientType<any, any, any>
     public logger: Logger
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    public sequelize: any // Stupid sequelize shit
     public commands: Collection<string, Command>
 
+    // Register event handlers
     private async registerEvents(): Promise<void> {
         await readdir('./dist/events')
             .then((files: string[]) =>
@@ -89,7 +96,8 @@ export default class Accomplice extends Client {
             })
     }
 
-    private async registerCommands(): Promise<void> {
+    // Register command handler
+    private registerCommandHandler(): void {
         this.on(DiscordEvents.InteractionCreate, async interaction => {
             if (!interaction.isChatInputCommand()) return
 
@@ -124,7 +132,10 @@ export default class Accomplice extends Client {
                 }
             }
         })
+    }
 
+    // Registers slash commands to guilds on startup or guild join
+    public async registerCommands(guildId?: string): Promise<void> {
         await readdir('./dist/commands')
             .then((files: string[]) =>
                 files.filter(file => file.endsWith('.js'))
@@ -159,19 +170,34 @@ export default class Accomplice extends Client {
                         userId = (await this.user?.fetch())?.id
                     }
 
-                    for (const guildCollection of await this.guilds.fetch()) {
+                    if (guildId) {
                         this.logger.debug(
-                            `Registering commands with guild "${guildCollection[1].name}" (${guildCollection[1].id})`
+                            `Registering commands with guild ${guildId}`
                         )
                         await this.rest.put(
                             DiscordRestRoutes.applicationGuildCommands(
                                 userId,
-                                guildCollection[1].id
+                                guildId
                             ),
                             {
                                 body: commandsJSONArray
                             }
                         )
+                    } else {
+                        for (const guildCollection of await this.guilds.fetch()) {
+                            this.logger.debug(
+                                `Registering commands with guild "${guildCollection[1].name}" (${guildCollection[1].id})`
+                            )
+                            await this.rest.put(
+                                DiscordRestRoutes.applicationGuildCommands(
+                                    userId,
+                                    guildCollection[1].id
+                                ),
+                                {
+                                    body: commandsJSONArray
+                                }
+                            )
+                        }
                     }
 
                     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -183,6 +209,73 @@ export default class Accomplice extends Client {
                 return commandFiles
             })
     }
+
+    public async synchronizeGuilds(
+        guildId?: string,
+        interaction?: ChatInputCommandInteraction
+    ): Promise<void> {
+        let guilds: Collection<string, OAuth2Guild> = new Collection()
+
+        if (guildId) {
+            const fetchedGuilds = await this.guilds.fetch()
+            const guild = fetchedGuilds.get(guildId)
+
+            if (!guild || guild === null) {
+                this.logger.error(
+                    `DiscordJS couldn't resolve guild "${guildId}"`
+                )
+                return
+            }
+
+            guilds.set(guildId, guild)
+        } else {
+            guilds = await this.guilds.fetch()
+        }
+
+        for (const [guildId, guild] of guilds) {
+            const { Guild } = this.sequelize.models
+
+            const [guildRow, created] = await Guild.findOrCreate({
+                where: { snowflake: guildId },
+                defaults: {
+                    uuid: uuidv4(),
+                    snowflake: guildId,
+                    isPriority: false
+                }
+            })
+
+            if (created) {
+                this.logger.info(
+                    `Registered guild "${guild.name}" (${guild.id}) in database`
+                )
+            }
+
+            this.synchronizeChannels(guild, guildRow, interaction)
+        }
+    }
+
+    private async synchronizeChannels(
+        guild: OAuth2Guild,
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        guildRow: any, // Stupid sequelize shit
+        interaction?: ChatInputCommandInteraction
+    ): Promise<void> {
+        // Used when triggered via chat command, provides progress updates
+        if (interaction) {
+            await interaction.followUp('status here')
+        }
+        console.log(guild.id, guildRow)
+    }
+
+    //
+    // private async checkGuildSyncStates(): Promise<void> {
+    //     // for each guild of guilds
+    //     //    // for each channel of guild
+    //     //        // if channel.getLatestMessage().snowflake !== db.channels.findBySnowflake(channel.snowflake).latestMessageSnowflake
+    //     //          // // channel sync is behind, update channel content
+    //     //          // for each message of channel since latestMessageSnowflake
+    //     //              // db.reacts.store(message.reacts)
+    // }
 
     public async start(): Promise<Accomplice> {
         // Setup redis, perform quick write check
@@ -200,6 +293,9 @@ export default class Accomplice extends Client {
 
         await this.registerEvents()
         await this.login(token)
+
+        await this.synchronizeGuilds()
+        this.registerCommandHandler()
         await this.registerCommands()
 
         return this

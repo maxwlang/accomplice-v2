@@ -8,7 +8,7 @@ export default class LeaderboardUpdate implements EventHandle {
     public fireOnce = false
 
     public execute = async ({ bot }: { bot: Accomplice }): Promise<void> => {
-        bot.logger.info('Hello world from inside test event!')
+        bot.logger.info(`${this.trigger} fired`)
         return
     }
 }

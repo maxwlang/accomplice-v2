@@ -19,12 +19,12 @@ import fs from 'fs'
 
         logger.info(
             `Database stats\n------------------------\n| ${await Guild.count()} guilds | ${await Starboard.count()} starboards |\n| ${await Leaderboard.count()} leaderboards | ${await User.count()} users |\n------------------------`
-            // `| ${await Leaderboard.count()} | ${await User.count()} users`
         )
 
         logger.info('Loading bot..')
         const accomplice = new Accomplice({
-            logger
+            logger,
+            sequelize: db.sequelize
         })
 
         await accomplice.start()

@@ -14,6 +14,7 @@ module.exports = (sequelize, DataTypes) => {
     Starboard.init(
         {
             uuid: { type: DataTypes.UUID, unique: true, allowNull: false },
+            guildId: { type: DataTypes.UUID, unique: true, allowNull: false },
             name: { type: DataTypes.STRING, allowNull: true }, // Unique per-guild, not a unique column
             channel: {
                 // Not unique, a channel may have multiple boards
