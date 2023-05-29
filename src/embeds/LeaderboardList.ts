@@ -5,18 +5,6 @@ import { isEmpty } from 'ramda'
 
 export default class LeaderboardList implements Embed {
     public getEmbed(leaderboards: Leaderboard[]): EmbedBuilder {
-        leaderboards = [
-            {
-                channel: '992684371117097081',
-                guildId: 'aaaa-eeee-bbbb-cccc-eeee',
-                uuid: 'rrfrr-eeee-aaas-ssss-tgggg'
-            },
-            {
-                channel: '1085060769730801786',
-                guildId: 'aaaa-eeee-bbbb-cccc-eeee',
-                uuid: 'rrfrr-eeee-aaas-ssss-tgggg'
-            }
-        ]
         let embed = new EmbedBuilder()
             .setTitle('Leaderboards')
             .setColor('Blue')
