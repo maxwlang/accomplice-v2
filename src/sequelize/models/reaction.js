@@ -16,7 +16,7 @@ module.exports = (sequelize, DataTypes) => {
             uuid: { type: DataTypes.UUID, unique: true, allowNull: false },
             type: { type: DataTypes.STRING, allowNull: false }, // Enum, Emoji, Custom, CustomGIF, CustomSuper, CustomSuperGif
             content: { type: DataTypes.STRING, allowNull: false },
-            id: { type: DataTypes.STRING, allowNull: true },
+            emojiId: { type: DataTypes.STRING, allowNull: true },
             reacteeUserId: { type: DataTypes.UUID, allowNull: false },
             reactorUserId: { type: DataTypes.UUID, allowNull: false }
         },

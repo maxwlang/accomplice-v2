@@ -22,7 +22,7 @@ export interface Reaction {
     content: string
 
     // The ID of the emoji
-    id: string | null
+    emojiId: string | null
 
     // The user who has received the reaction
     reacteeUserId: uuid
