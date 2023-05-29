@@ -24,7 +24,7 @@ export default class PingCommand implements Command {
                 PermissionFlagsBits.SendMessages,
                 PermissionFlagsBits.SendMessagesInThreads,
                 PermissionFlagsBits.AddReactions,
-                PermissionFlagsBits.EmbedLinks, // For what?
+                PermissionFlagsBits.EmbedLinks,
                 PermissionFlagsBits.ReadMessageHistory,
                 PermissionFlagsBits.UseApplicationCommands,
                 PermissionFlagsBits.UseExternalEmojis,

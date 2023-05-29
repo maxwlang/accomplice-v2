@@ -20,7 +20,6 @@ fs.readdirSync(__dirname)
         )
     })
     .forEach(file => {
-        console.log({ file2: file, path: path.join(__dirname, file) })
         const model = require(path.join(__dirname, file))(
             sequelize,
             Sequelize.DataTypes

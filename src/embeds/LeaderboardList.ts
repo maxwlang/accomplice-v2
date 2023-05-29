@@ -1,11 +1,11 @@
-import { EmbedBuilder, channelMention } from 'discord.js'
+import { EmbedBuilder, bold, channelMention } from 'discord.js'
 import Embed from '../types/Embed'
 import { Leaderboard } from '../sequelize/types/leaderboard'
 import { isEmpty } from 'ramda'
 
 export default class LeaderboardList implements Embed {
     public getEmbed(leaderboards: Leaderboard[]): EmbedBuilder {
-        let embed = new EmbedBuilder()
+        const embed = new EmbedBuilder()
             .setTitle('Leaderboards')
             .setColor('Blue')
             .setTimestamp()
@@ -18,23 +18,17 @@ export default class LeaderboardList implements Embed {
                 .setDescription(
                     'There are no leaderboards configured for this guild'
                 )
-                .addFields({ name: 'Leaderboard Locations', value: '\u200B' })
         } else {
-            embed = embed.setDescription(
+            return embed.setDescription(
                 `This guild has ${leaderboards.length} ${
                     leaderboards.length === 1 ? 'leaderboard' : 'leaderboards'
-                }.`
+                }.\n\n${bold('Leaderboard Locations:')}\n${leaderboards.map(
+                    leaderboard =>
+                        `- ${channelMention(leaderboard.channelSnowflake)}\n`
+                )}`
             )
-
-            for (const leaderboard of leaderboards) {
-                embed = embed.addFields({
-                    name: '\u200B',
-                    value: channelMention(leaderboard.channel),
-                    inline: true
-                })
-            }
-
-            return embed
         }
     }
+
+    public getComponents = (): null => null
 }

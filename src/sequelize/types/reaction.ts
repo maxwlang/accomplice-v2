@@ -21,9 +21,12 @@ export interface Reaction {
     // The reaction name or unicode emoji character
     content: string
 
+    // The ID of the emoji
+    id: string | null
+
     // The user who has received the reaction
     reacteeUserId: uuid
 
     // The user who has reacted
-    reactedUserId: uuid
+    reactorUserId: uuid
 }

@@ -57,7 +57,6 @@ export default class Accomplice extends Client {
     public sequelize: any // Stupid sequelize shit
     public commands: Collection<string, Command>
 
-    // Register event handlers
     private async registerEvents(): Promise<void> {
         await readdir('./dist/events')
             .then((files: string[]) =>
@@ -85,18 +84,15 @@ export default class Accomplice extends Client {
                                 eventHandle.execute({ args, bot: this })
                             )
                         }
-
-                        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                    } catch (e: any) {
+                    } catch (e) {
                         this.logger.error(
-                            `Failed to load event handler "${eventFile}" with error: ${e.toString()}`
+                            `Failed to load event handler "${eventFile}" with error: ${e}`
                         )
                     }
                 }
             })
     }
 
-    // Register command handler
     private registerCommandHandler(): void {
         this.on(DiscordEvents.InteractionCreate, async interaction => {
             if (!interaction.isChatInputCommand()) return
@@ -134,7 +130,6 @@ export default class Accomplice extends Client {
         })
     }
 
-    // Registers slash commands to guilds on startup or guild join
     public async registerCommands(guildId?: string): Promise<void> {
         await readdir('./dist/commands')
             .then((files: string[]) =>
@@ -157,10 +152,9 @@ export default class Accomplice extends Client {
                             this.logger.debug(
                                 `[Load Command] Name: "${command.meta.name}" ; Description: "${command.meta.description}"`
                             )
-                            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                        } catch (e: any) {
+                        } catch (e) {
                             this.logger.error(
-                                `Failed to load command "${commandFile}" with error: ${e.toString()}`
+                                `Failed to load command "${commandFile}" with error: ${e}`
                             )
                         }
                     }
@@ -199,11 +193,9 @@ export default class Accomplice extends Client {
                             )
                         }
                     }
-
-                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                } catch (e: any) {
+                } catch (e) {
                     this.logger.error(
-                        `Failed to load commands with error: ${e.toString()}`
+                        `Failed to load commands with error: ${e}`
                     )
                 }
                 return commandFiles
@@ -267,6 +259,16 @@ export default class Accomplice extends Client {
         console.log(guild.id, guildRow)
     }
 
+    public async updateLeaderboardEmbed(leaderboardId: string): Promise<void> {
+        console.log('update leaderboard', leaderboardId)
+    }
+
+    public async updateLeaderboardEmbeds(guildId: string): Promise<void> {
+        console.log('update leaderboards', guildId)
+        // for each leaderboard in guild
+        //  // this.updateLeaderboardEmbed(leaderboard.id)
+    }
+
     //
     // private async checkGuildSyncStates(): Promise<void> {
     //     // for each guild of guilds
@@ -289,14 +291,14 @@ export default class Accomplice extends Client {
             throw new Error('Redis check failed')
         }
         await this.redis.del(`${redisPrefix}${uniqueKey}_test`)
-        // await this.redis.disconnect() // Is it better practice to leave redis connected?
 
-        await this.registerEvents()
+        await this.registerEvents() // Configure event listeners
         await this.login(token)
 
-        await this.synchronizeGuilds()
-        this.registerCommandHandler()
-        await this.registerCommands()
+        await this.synchronizeGuilds() // Get up to date with messages in guilds
+        this.registerCommandHandler() // Configure command event listeners
+        await this.registerCommands() // Register commands w/ guilds
+        // this.registerLeaderboards() // Get messages from snowflake ids in db, edit every 2.5 min?
 
         return this
     }

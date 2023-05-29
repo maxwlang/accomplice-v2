@@ -7,6 +7,9 @@ export interface Leaderboard {
     // The uuid for the guild, links with uuid on the Guild table
     guildId: uuid
 
+    // The snowflake of the leaderboard embed message
+    messageSnowflake: string
+
     // The channel snowflake for the leaderboard
-    channel: string
+    channelSnowflake: string
 }

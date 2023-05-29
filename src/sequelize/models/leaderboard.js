@@ -15,7 +15,16 @@ module.exports = (sequelize, DataTypes) => {
         {
             uuid: { type: DataTypes.UUID, unique: true, allowNull: false },
             guildId: { type: DataTypes.UUID, unique: true, allowNull: false },
-            channel: { type: DataTypes.STRING, unique: true, allowNull: false } // There may only be one leaderboard per channel, but there may be multiple trackers
+            channelSnowflake: {
+                type: DataTypes.STRING,
+                unique: true,
+                allowNull: false
+            }, // There may only be one leaderboard per channel, but there may be multiple trackers
+            messageSnowflake: {
+                type: DataTypes.STRING,
+                unique: true,
+                allowNull: false
+            }
         },
         {
             sequelize,

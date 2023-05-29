@@ -31,12 +31,10 @@ export default class GuildLeave implements EventHandle {
             return
         }
 
-        Guild.destroy({
+        await Guild.destroy({
             where: {
                 uuid: guildRow.uuid
             }
         })
-
-        return
     }
 }

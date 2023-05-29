@@ -15,7 +15,17 @@ module.exports = (sequelize, DataTypes) => {
         {
             uuid: { type: DataTypes.UUID, unique: true },
             name: { type: DataTypes.STRING, allowNull: true }, // Unique per-guild, not a unique column
-            react: { type: DataTypes.STRING, allowNull: false }
+            maxEntries: {
+                type: DataTypes.INTEGER,
+                allowNull: false,
+                defaultValue: 10
+            },
+
+            // At least one of these needs to be provided:
+            reactionType: { type: DataTypes.STRING, allowNull: true },
+            reactionContent: { type: DataTypes.STRING, allowNull: true },
+            reacteeUserId: { type: DataTypes.STRING, allowNull: true },
+            reactorUserId: { type: DataTypes.STRING, allowNull: true }
         },
         {
             sequelize,

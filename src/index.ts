@@ -19,7 +19,6 @@ import fs from 'fs'
         }
 
         const { Guild, Starboard, Leaderboard, User } = db.sequelize.models
-        console.log(db.sequelize.models.User)
 
         logger.info(
             `Database stats\n------------------------\n| ${await Guild.count()} guilds | ${await Starboard.count()} starboards |\n| ${await Leaderboard.count()} leaderboards | ${await User.count()} users |\n------------------------`
