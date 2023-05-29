@@ -1,4 +1,5 @@
 import { Guild } from 'discord.js'
+import { Guild as GuildRow } from '../sequelize/types/guild'
 import Accomplice from '../accomplice'
 import EventHandle from '../types/EventHandle'
 import { isEmpty } from 'ramda'
@@ -22,7 +23,9 @@ export default class GuildLeave implements EventHandle {
 
         bot.logger.info(`Left guild "${guild.name}" (${guild.id})`)
 
-        const guildRow = await Guild.findOne({ where: { snowflake: guild.id } })
+        const guildRow: GuildRow = await Guild.findOne({
+            where: { snowflake: guild.id }
+        })
         if (guildRow === null || !guildRow) {
             bot.logger.error(`Failed to locate guild in database`)
             return

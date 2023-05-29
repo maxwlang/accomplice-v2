@@ -1,7 +1,7 @@
 'use strict'
 const { Model } = require('sequelize')
 module.exports = (sequelize, DataTypes) => {
-    class GuildReactions extends Model {
+    class GuildUsers extends Model {
         /**
          * Helper method for defining associations.
          * This method is not a part of Sequelize lifecycle.
@@ -11,21 +11,16 @@ module.exports = (sequelize, DataTypes) => {
             // define association here
         }
     }
-    GuildReactions.init(
+    GuildUsers.init(
         {
             uuid: { type: DataTypes.UUID, unique: true, allowNull: false },
             guildId: { type: DataTypes.UUID, allowNull: false },
-            reactionId: {
-                // Reactions are unique to each guild
-                type: DataTypes.UUID,
-                unique: true,
-                allowNull: false
-            }
+            userId: { type: DataTypes.UUID, allowNull: false }
         },
         {
             sequelize,
-            modelName: 'GuildReactions'
+            modelName: 'GuildUsers'
         }
     )
-    return GuildReactions
+    return GuildUsers
 }

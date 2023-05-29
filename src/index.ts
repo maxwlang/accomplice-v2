@@ -11,7 +11,11 @@ import fs from 'fs'
 
         if (!fs.existsSync('./data/.db-initialized')) {
             await db.sequelize.sync({ force: true })
-            fs.writeFileSync('./data/.db-initialized', '', 'utf-8')
+            fs.writeFileSync(
+                './data/.db-initialized',
+                new Date().getTime().toString(),
+                'utf-8'
+            )
         }
 
         const { Guild, Starboard, Leaderboard, User } = db.sequelize.models

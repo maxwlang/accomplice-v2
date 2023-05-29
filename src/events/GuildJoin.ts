@@ -23,7 +23,6 @@ export default class GuildJoin implements EventHandle {
 
         bot.logger.info(`Joined guild "${guild.name}" (${guild.id})`)
 
-        // [guildRow, created] =
         await Guild.findOrCreate({
             where: { snowflake: guild.id },
             defaults: {

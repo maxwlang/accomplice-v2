@@ -2,6 +2,8 @@ import { ChatInputCommandInteraction, SlashCommandBuilder } from 'discord.js'
 import Command from '../types/Command'
 import Accomplice from '../accomplice'
 import LeaderboardList from '../embeds/LeaderboardList'
+import { Leaderboard } from '../sequelize/types/leaderboard'
+import { Guild } from '../sequelize/types/guild'
 
 export default class LeaderboardCommand implements Command {
     // Should be admin perms
@@ -126,7 +128,7 @@ export default class LeaderboardCommand implements Command {
         interaction: ChatInputCommandInteraction
     ): Promise<void> {
         const { Guild, Leaderboard } = bot.sequelize.models
-        const guildRow = await Guild.findOne({
+        const guildRow: Guild = await Guild.findOne({
             where: { snowflake: interaction.guildId }
         })
 
@@ -139,19 +141,19 @@ export default class LeaderboardCommand implements Command {
             return
         }
 
-        const leaderboards = await Leaderboard.findAll({
+        const leaderboards: Leaderboard[] = await Leaderboard.findAll({
             where: {
                 guildId: guildRow.uuid
             }
         })
 
-        const leaderboardListEmbed = new LeaderboardList().getEmbed()
+        const leaderboardListEmbed = new LeaderboardList().getEmbed(
+            leaderboards
+        )
 
-        await interaction.editReply(leaderboardListEmbed)
-
-        console.log({ leaderboards })
-
-        await interaction.reply('ayo bruh')
+        await interaction.reply({
+            embeds: [leaderboardListEmbed]
+        })
     }
 
     private async leaderboardSync(

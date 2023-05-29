@@ -31,7 +31,7 @@ export default class ActivityRotation implements EventHandle {
 const activityNames = [
     "Garry's Mod",
     'Reddit',
-    'Porn Hub',
+    'PornHub',
     'Pooping With Friends',
     'the stars',
     'your messages',

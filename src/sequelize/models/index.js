@@ -13,7 +13,6 @@ const sequelize = new Sequelize(config)
 
 fs.readdirSync(__dirname)
     .filter(file => {
-        console.log({ file })
         return (
             file.indexOf('.') !== 0 &&
             file !== basename &&
@@ -21,7 +20,7 @@ fs.readdirSync(__dirname)
         )
     })
     .forEach(file => {
-        console.log({ file2: file })
+        console.log({ file2: file, path: path.join(__dirname, file) })
         const model = require(path.join(__dirname, file))(
             sequelize,
             Sequelize.DataTypes
