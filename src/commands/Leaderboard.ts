@@ -51,10 +51,12 @@ export default class LeaderboardCommand implements Command {
                 .setDescription(
                     'Starts tracking a new react on the leaderboard'
                 )
-                .addStringOption(option =>
+                .addChannelOption(option =>
                     option
-                        .setName('leaderboard')
-                        .setDescription('The leaderboard id')
+                        .setName('channel')
+                        .setDescription(
+                            "The channel with the leaderboard you'd like to add a tracker to"
+                        )
                         .setRequired(true)
                 )
                 .addStringOption(option =>
@@ -79,10 +81,12 @@ export default class LeaderboardCommand implements Command {
             subCommand
                 .setName('untrack')
                 .setDescription('Stops tracking a react on the leaderboard')
-                .addStringOption(option =>
+                .addChannelOption(option =>
                     option
-                        .setName('leaderboard')
-                        .setDescription('The leaderboard id')
+                        .setName('channel')
+                        .setDescription(
+                            "The channel with the leaderboard you'd like to remove a tracker from"
+                        )
                         .setRequired(true)
                 )
                 .addStringOption(option =>
@@ -90,6 +94,20 @@ export default class LeaderboardCommand implements Command {
                         .setName('reaction')
                         .setDescription(
                             'The reaction to stop tracking (emoji, custom emote)'
+                        )
+                        .setRequired(true)
+                )
+        )
+        // Leaderboard - trackers
+        .addSubcommand(subCommand =>
+            subCommand
+                .setName('trackers')
+                .setDescription('Lists trackers on a leaderboard')
+                .addChannelOption(option =>
+                    option
+                        .setName('channel')
+                        .setDescription(
+                            "The channel with the leaderboard you'd like to check trackers on"
                         )
                         .setRequired(true)
                 )
@@ -124,19 +142,23 @@ export default class LeaderboardCommand implements Command {
         interaction: ChatInputCommandInteraction
     }): Promise<void> => {
         switch (interaction.options.getSubcommand()) {
-            case 'create':
+            case 'create': // Done
                 await this.createLeaderboard(bot, interaction)
                 break
 
-            case 'remove':
+            case 'remove': // Done
                 await this.removeLeaderboard(bot, interaction)
                 break
 
-            case 'list':
+            case 'track': // TODO
+                await this.createTracker(bot, interaction)
+                break
+
+            case 'list': // Done
                 await this.listLeaderboard(bot, interaction)
                 break
 
-            case 'synchronize':
+            case 'synchronize': // TODO
                 await this.leaderboardSync(bot, interaction)
                 break
 
@@ -274,6 +296,13 @@ export default class LeaderboardCommand implements Command {
                 channel.id
             )} has been removed.`
         )
+    }
+
+    private async createTracker(
+        bot: Accomplice,
+        interaction: ChatInputCommandInteraction
+    ): Promise<void> {
+        console.log(bot, interaction)
     }
 
     private async listLeaderboard(
