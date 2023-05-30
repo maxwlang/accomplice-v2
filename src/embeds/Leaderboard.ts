@@ -3,7 +3,7 @@ import Embed from '../types/Embed'
 import { Leaderboard } from '../sequelize/types/leaderboard'
 // import { Tracker } from '../sequelize/types/tracker'
 
-export default class LeaderboardList implements Embed {
+export default class LeaderboardEmbed implements Embed {
     public getEmbed({
         leaderboard
     }: // trackers
