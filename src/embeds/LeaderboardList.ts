@@ -22,10 +22,12 @@ export default class LeaderboardList implements Embed {
             return embed.setDescription(
                 `This guild has ${leaderboards.length} ${
                     leaderboards.length === 1 ? 'leaderboard' : 'leaderboards'
-                }.\n\n${bold('Leaderboard Locations:')}\n${leaderboards.map(
-                    leaderboard =>
-                        `- ${channelMention(leaderboard.channelSnowflake)}\n`
-                )}`
+                }.\n\n${bold('Leaderboard Locations:')}\n${leaderboards
+                    .map(
+                        leaderboard =>
+                            `- ${channelMention(leaderboard.channelSnowflake)}`
+                    )
+                    .join('\n')}`
             )
         }
     }
