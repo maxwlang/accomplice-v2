@@ -132,6 +132,6 @@ export default class ReactionRemoved implements EventHandle {
         }
 
         // update leaderboard
-        bot.updateLeaderboardEmbeds(messageReaction.message.guildId)
+        // bot.updateLeaderboardEmbeds(messageReaction.message.guildId)
     }
 }

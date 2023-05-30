@@ -117,6 +117,6 @@ export default class ReactionAdded implements EventHandle {
         }
 
         // update leaderboard
-        bot.updateLeaderboardEmbeds(messageReaction.message.guildId)
+        // bot.updateleaderboardembed(messageReaction.message.guildId)
     }
 }
