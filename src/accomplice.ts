@@ -1,5 +1,6 @@
 import { readdir } from 'fs/promises'
 import {
+    ChannelType,
     ChatInputCommandInteraction,
     Client,
     Collection,
@@ -13,6 +14,7 @@ import {
 import { RedisClientType, createClient } from 'redis'
 import { Logger } from 'winston'
 import EventHandle from './types/EventHandle'
+import { Leaderboard } from './sequelize/types/leaderboard'
 import { token } from './config/discord'
 import { redisPrefix } from './config/redis'
 import { v4 as uuidv4 } from 'uuid'
@@ -112,7 +114,7 @@ export default class Accomplice extends Client {
                     interaction
                 })
             } catch (error) {
-                this.logger.error(error)
+                console.log(error)
                 if (interaction.replied || interaction.deferred) {
                     await interaction.followUp({
                         content:
@@ -259,15 +261,72 @@ export default class Accomplice extends Client {
         console.log(guild.id, guildRow)
     }
 
-    public async updateLeaderboardEmbed(leaderboardId: string): Promise<void> {
-        console.log('update leaderboard', leaderboardId)
+    public async createOrUpdateLeaderboardEmbed(
+        leaderboardId: string
+    ): Promise<void> {
+        const { Leaderboard } = this.sequelize.models
+        const leaderboard: Leaderboard | null = await Leaderboard.findOne({
+            where: { uuid: leaderboardId }
+        })
+
+        if (leaderboard === null || !leaderboard) {
+            this.logger.error('Failed to locate leaderboard in database')
+            return
+        }
+
+        const messageId = leaderboard.messageSnowflake
+
+        if (!messageId || messageId === null) {
+            // Leaderboard message id doesn't exist in DB, create new leaderboard message
+        } else {
+            // Leaderboard message id exists, obtain a state of that message
+            const guildsCollection = await this.guilds.fetch()
+            const leaderboardGuild = guildsCollection.get(leaderboard.guildId)
+
+            if (!leaderboardGuild || leaderboardGuild === null) {
+                this.logger.error('Failed to locate leaderboard guild')
+                return
+            }
+
+            const guildChannels = await (
+                await leaderboardGuild.fetch()
+            ).channels.fetch()
+
+            let leaderboardChannel = guildChannels.get(
+                leaderboard.channelSnowflake
+            )
+
+            if (!leaderboardChannel || leaderboardChannel === null) {
+                this.logger.error('Failed to locate leaderboard channel')
+                return
+            }
+
+            leaderboardChannel = await leaderboardChannel.fetch()
+
+            if (leaderboardChannel.type !== ChannelType.GuildText) {
+                this.logger.error('Leaderboard channel is of an invalid type')
+                return
+            }
+
+            const messages = await leaderboardChannel.messages.fetch()
+            const leaderboardMessage = messages.get(messageId)
+
+            if (!leaderboardMessage || leaderboardMessage === null) {
+                this.logger.error('Leaderboard message does not exist')
+                return
+            }
+
+            leaderboardMessage.edit('hello world')
+        }
     }
 
-    public async updateLeaderboardEmbeds(guildId: string): Promise<void> {
-        console.log('update leaderboards', guildId)
-        // for each leaderboard in guild
-        //  // this.updateLeaderboardEmbed(leaderboard.id)
-    }
+    // public async createOrUpdateLeaderboardEmbeds(
+    //     guildId: string
+    // ): Promise<void> {
+    //     console.log('update leaderboards', guildId)
+    //     // for each leaderboard in guild
+    //     //  // this.createOrUpdateLeaderboardEmbed(leaderboard.id)
+    // }
 
     //
     // private async checkGuildSyncStates(): Promise<void> {

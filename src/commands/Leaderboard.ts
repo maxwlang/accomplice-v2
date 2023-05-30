@@ -177,12 +177,12 @@ export default class LeaderboardCommand implements Command {
             await Leaderboard.findOrCreate({
                 where: {
                     guildId: guildRow.uuid,
-                    channel: channel.id
+                    channelSnowflake: channel.id
                 },
                 defaults: {
                     uuid: uuidv4(),
                     guildId: guildRow.uuid,
-                    channel: channel.id
+                    channelSnowflake: channel.id
                 }
             })
 
@@ -195,6 +195,8 @@ export default class LeaderboardCommand implements Command {
                 )} command.`
             )
         } else {
+            await bot.createOrUpdateLeaderboardEmbed(leaderboard.uuid)
+
             await interaction.reply(
                 `A leaderboard has been created in ${channelMention(
                     channel.id
@@ -238,7 +240,7 @@ export default class LeaderboardCommand implements Command {
         const leaderboard: Leaderboard | null = await Leaderboard.findOne({
             where: {
                 guildId: guildRow.uuid,
-                channel: channel.id
+                channelSnowflake: channel.id
             }
         })
 

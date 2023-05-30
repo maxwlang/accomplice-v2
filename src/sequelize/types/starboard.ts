@@ -11,10 +11,10 @@ export interface Starboard {
     name: string | null
 
     // The starboard channel snowflake
-    channel: string
+    channelSnowflake: string
 
     // An optional channel snowflake to monitor for reacts. Ignores all other channels when set
-    monitorChannel: string | null
+    monitorChannelSnowflake: string | null
 
     // Toggles if bot reacts should count
     allowBotReacts: boolean

@@ -14,9 +14,11 @@ module.exports = (sequelize, DataTypes) => {
     Reaction.init(
         {
             uuid: { type: DataTypes.UUID, unique: true, allowNull: false },
+            guildId: { type: DataTypes.UUID, allowNull: false },
             type: { type: DataTypes.STRING, allowNull: false }, // Enum, Emoji, Custom, CustomGIF, CustomSuper, CustomSuperGif
             content: { type: DataTypes.STRING, allowNull: false },
             emojiId: { type: DataTypes.STRING, allowNull: true },
+            messageSnowflake: { type: DataTypes.STRING, allowNull: true },
             reacteeUserId: { type: DataTypes.UUID, allowNull: false },
             reactorUserId: { type: DataTypes.UUID, allowNull: false }
         },

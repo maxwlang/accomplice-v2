@@ -24,6 +24,9 @@ export interface Reaction {
     // The ID of the emoji
     emojiId: string | null
 
+    // The snowflake for the reacted message
+    messageSnowflake: string
+
     // The user who has received the reaction
     reacteeUserId: uuid
 

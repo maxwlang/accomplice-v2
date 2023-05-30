@@ -14,7 +14,7 @@ module.exports = (sequelize, DataTypes) => {
     Leaderboard.init(
         {
             uuid: { type: DataTypes.UUID, unique: true, allowNull: false },
-            guildId: { type: DataTypes.UUID, unique: true, allowNull: false },
+            guildId: { type: DataTypes.UUID, allowNull: false },
             channelSnowflake: {
                 type: DataTypes.STRING,
                 unique: true,
@@ -23,7 +23,7 @@ module.exports = (sequelize, DataTypes) => {
             messageSnowflake: {
                 type: DataTypes.STRING,
                 unique: true,
-                allowNull: false
+                allowNull: true
             }
         },
         {

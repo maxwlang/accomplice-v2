@@ -16,12 +16,12 @@ module.exports = (sequelize, DataTypes) => {
             uuid: { type: DataTypes.UUID, unique: true, allowNull: false },
             guildId: { type: DataTypes.UUID, unique: true, allowNull: false },
             name: { type: DataTypes.STRING, allowNull: true }, // Unique per-guild, not a unique column
-            channel: {
+            channelSnowflake: {
                 // Not unique, a channel may have multiple boards
                 type: DataTypes.STRING,
                 allowNull: false
             },
-            monitorChannel: {
+            monitorChannelSnowflake: {
                 // Not unique, a channel may be monitored by multiple boards
                 type: DataTypes.STRING,
                 allowNull: true

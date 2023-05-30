@@ -102,13 +102,12 @@ export default class ReactionAdded implements EventHandle {
                 return
             }
 
-            // react create
             await Reaction.create({
                 uuid: uuidv4(),
                 guildId: messageReaction.message.guildId,
                 type: emojiType,
                 content: emoji.name,
-                id: emoji.id || null,
+                emojiId: emoji.id || null,
                 reacteeUserId: reactee.uuid,
                 reactorUserId: reactor.uuid
             })
