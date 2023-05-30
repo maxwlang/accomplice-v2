@@ -15,10 +15,12 @@ import { RedisClientType, createClient } from 'redis'
 import { Logger } from 'winston'
 import EventHandle from './types/EventHandle'
 import { Leaderboard } from './sequelize/types/leaderboard'
+import { Guild } from './sequelize/types/guild'
 import { token } from './config/discord'
 import { redisPrefix } from './config/redis'
 import { v4 as uuidv4 } from 'uuid'
 import Command from './types/Command'
+import LeaderboardEmbed from './embeds/Leaderboard'
 
 export default class Accomplice extends Client {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -115,18 +117,25 @@ export default class Accomplice extends Client {
                 })
             } catch (error) {
                 console.log(error)
-                if (interaction.replied || interaction.deferred) {
-                    await interaction.followUp({
-                        content:
-                            'There was an error while executing this command!',
-                        ephemeral: true
-                    })
-                } else {
-                    await interaction.reply({
-                        content:
-                            'There was an error while executing this command!',
-                        ephemeral: true
-                    })
+                try {
+                    if (interaction.replied || interaction.deferred) {
+                        await interaction.followUp({
+                            content:
+                                'There was an error while executing this command!',
+                            ephemeral: true
+                        })
+                    } else {
+                        await interaction.reply({
+                            content:
+                                'There was an error while executing this command!',
+                            ephemeral: true
+                        })
+                    }
+                } catch (e) {
+                    console.log(
+                        'Additionally, an error occured while trying to handle the previous error: ',
+                        e
+                    )
                 }
             }
         })
@@ -262,9 +271,12 @@ export default class Accomplice extends Client {
     }
 
     public async createOrUpdateLeaderboardEmbed(
-        leaderboardId: string
+        leaderboardId: string,
+        deleteEmbed?: true
     ): Promise<void> {
-        const { Leaderboard } = this.sequelize.models
+        const { Guild, Leaderboard } = this.sequelize.models
+
+        // Get leaderboard
         const leaderboard: Leaderboard | null = await Leaderboard.findOne({
             where: { uuid: leaderboardId }
         })
@@ -274,40 +286,63 @@ export default class Accomplice extends Client {
             return
         }
 
-        const messageId = leaderboard.messageSnowflake
+        // Get leaderboard guild
+        const guild: Guild | null = await Guild.findOne({
+            where: { uuid: leaderboard.guildId }
+        })
 
-        if (!messageId || messageId === null) {
+        if (guild === null || !guild) {
+            this.logger.error('Failed to locate guild in database')
+            return
+        }
+
+        const messageId = leaderboard.messageSnowflake
+        const guildsCollection = await this.guilds.fetch()
+        const leaderboardGuild = guildsCollection.get(guild.snowflake)
+
+        if (!leaderboardGuild || leaderboardGuild === null) {
+            this.logger.error('Failed to locate leaderboard guild')
+            return
+        }
+
+        // Get channels from guild
+        const guildChannels = await (
+            await leaderboardGuild.fetch()
+        ).channels.fetch()
+
+        // Find leaderboard channel
+        let leaderboardChannel = guildChannels.get(leaderboard.channelSnowflake)
+
+        if (!leaderboardChannel || leaderboardChannel === null) {
+            this.logger.error('Failed to locate leaderboard channel')
+            return
+        }
+
+        leaderboardChannel = await leaderboardChannel.fetch()
+
+        if (leaderboardChannel.type !== ChannelType.GuildText) {
+            this.logger.error('Leaderboard channel is of an invalid type')
+            return
+        }
+
+        if (!messageId || messageId === null || !deleteEmbed) {
             // Leaderboard message id doesn't exist in DB, create new leaderboard message
+            const leaderboardEmbed = new LeaderboardEmbed()
+            const message = await leaderboardChannel.send({
+                embeds: [leaderboardEmbed.getEmbed({ leaderboard })]
+            })
+
+            // Change everyone without a last name to "Doe"
+            await Leaderboard.update(
+                { messageSnowflake: message.id },
+                {
+                    where: {
+                        uuid: leaderboard.uuid
+                    }
+                }
+            )
         } else {
             // Leaderboard message id exists, obtain a state of that message
-            const guildsCollection = await this.guilds.fetch()
-            const leaderboardGuild = guildsCollection.get(leaderboard.guildId)
-
-            if (!leaderboardGuild || leaderboardGuild === null) {
-                this.logger.error('Failed to locate leaderboard guild')
-                return
-            }
-
-            const guildChannels = await (
-                await leaderboardGuild.fetch()
-            ).channels.fetch()
-
-            let leaderboardChannel = guildChannels.get(
-                leaderboard.channelSnowflake
-            )
-
-            if (!leaderboardChannel || leaderboardChannel === null) {
-                this.logger.error('Failed to locate leaderboard channel')
-                return
-            }
-
-            leaderboardChannel = await leaderboardChannel.fetch()
-
-            if (leaderboardChannel.type !== ChannelType.GuildText) {
-                this.logger.error('Leaderboard channel is of an invalid type')
-                return
-            }
-
             const messages = await leaderboardChannel.messages.fetch()
             const leaderboardMessage = messages.get(messageId)
 
@@ -316,7 +351,11 @@ export default class Accomplice extends Client {
                 return
             }
 
-            leaderboardMessage.edit('hello world')
+            if (deleteEmbed) {
+                await leaderboardMessage.delete()
+            } else {
+                await leaderboardMessage.edit('hello world')
+            }
         }
     }
 
