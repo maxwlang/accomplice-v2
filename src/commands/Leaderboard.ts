@@ -255,6 +255,8 @@ export default class LeaderboardCommand implements Command {
             return
         }
 
+        await bot.createOrUpdateLeaderboardEmbed(leaderboard.uuid, true)
+
         await Leaderboard.destroy({
             where: {
                 uuid: leaderboard.uuid
