@@ -2,6 +2,7 @@ import { createLogger, format, transports } from 'winston'
 const { combine, colorize, printf, timestamp } = format
 import { mkdir } from 'fs/promises'
 import { logLevel } from '../config/winston'
+import { avatarDisplayName } from '../config/discord'
 
 const logger = createLogger({
     level: logLevel,
@@ -32,7 +33,7 @@ const logger = createLogger({
                     timestamp({ format: 'MM/DD/YYYY hh:mm:ss A' }),
                     printf(
                         ({ timestamp, level, message }) =>
-                            `[${timestamp}][Accomplice][${level}]: ${message}`
+                            `[${timestamp}][${avatarDisplayName}][${level}]: ${message}`
                     )
                 )
             })

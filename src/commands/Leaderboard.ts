@@ -9,7 +9,10 @@ import Accomplice from '../accomplice'
 import LeaderboardList from '../embeds/LeaderboardList'
 import { Leaderboard } from '../sequelize/types/leaderboard'
 import { Guild } from '../sequelize/types/guild'
+import { Tracker } from '../sequelize/types/tracker'
 import { v4 as uuidv4 } from 'uuid'
+import { ReactionType } from '../sequelize/types/reaction'
+// import { Tracker } from '../sequelize/types/tracker'
 
 export default class LeaderboardCommand implements Command {
     // Should be admin perms
@@ -44,20 +47,12 @@ export default class LeaderboardCommand implements Command {
                         .setRequired(true)
                 )
         )
-        // Leaderboard - track
+        // Leaderboard - tracker-create
         .addSubcommand(subCommand =>
             subCommand
-                .setName('track')
+                .setName('tracker-create')
                 .setDescription(
-                    'Starts tracking a new react on the leaderboard'
-                )
-                .addChannelOption(option =>
-                    option
-                        .setName('channel')
-                        .setDescription(
-                            "The channel with the leaderboard you'd like to add a tracker to"
-                        )
-                        .setRequired(true)
+                    'Creates a tracker that can be added to leaderboards'
                 )
                 .addStringOption(option =>
                     option
@@ -75,12 +70,75 @@ export default class LeaderboardCommand implements Command {
                         )
                         .setMaxLength(32)
                 )
+                .addIntegerOption(option =>
+                    option
+                        .setName('length')
+                        .setDescription(
+                            'How many entries to show on the leaderboard. Default: 10'
+                        )
+                        .setMinValue(1)
+                )
+        )
+        // Leaderboard - tracker-destroy
+        .addSubcommand(subCommand =>
+            subCommand
+                .setName('tracker-destroy')
+                .setDescription(
+                    'Removed a tracker from the guild and all leaderboards'
+                )
+                .addChannelOption(option =>
+                    option
+                        .setName('channel')
+                        .setDescription(
+                            "The channel with the leaderboard you'd like to remove a tracker from"
+                        )
+                        .setRequired(true)
+                )
+                .addStringOption(option =>
+                    option
+                        .setName('reaction')
+                        .setDescription(
+                            'The reaction to stop tracking (emoji, custom emote)'
+                        )
+                        .setRequired(true)
+                )
+        )
+        // Leaderboard - track
+        .addSubcommand(subCommand =>
+            subCommand
+                .setName('track')
+                .setDescription('Adds a tracker to the supplied leaderboard')
+                .addStringOption(option =>
+                    option
+                        .setName('reaction')
+                        .setDescription(
+                            'The reaction to start tracking (emoji, custom emote)'
+                        )
+                        .setRequired(true)
+                )
+                .addStringOption(option =>
+                    option
+                        .setName('name')
+                        .setDescription(
+                            'An optional statistic name associated with the react'
+                        )
+                        .setMaxLength(32)
+                )
+                .addChannelOption(option =>
+                    option
+                        .setName('channel')
+                        .setDescription(
+                            "The channel with the leaderboard you'd like to add a tracker to"
+                        )
+                )
         )
         // Leaderboard - untrack
         .addSubcommand(subCommand =>
             subCommand
                 .setName('untrack')
-                .setDescription('Stops tracking a react on the leaderboard')
+                .setDescription(
+                    'Removes a tracker from the supplied leaderboard'
+                )
                 .addChannelOption(option =>
                     option
                         .setName('channel')
@@ -102,14 +160,15 @@ export default class LeaderboardCommand implements Command {
         .addSubcommand(subCommand =>
             subCommand
                 .setName('trackers')
-                .setDescription('Lists trackers on a leaderboard')
+                .setDescription(
+                    'Lists trackers on the guild or a specific leaderboard'
+                )
                 .addChannelOption(option =>
                     option
                         .setName('channel')
                         .setDescription(
-                            "The channel with the leaderboard you'd like to check trackers on"
+                            'List trackers assocated with this leaderboard'
                         )
-                        .setRequired(true)
                 )
         )
         // Leaderboard - list
@@ -150,7 +209,7 @@ export default class LeaderboardCommand implements Command {
                 await this.removeLeaderboard(bot, interaction)
                 break
 
-            case 'track': // TODO
+            case 'tracker-create': // TODO
                 await this.createTracker(bot, interaction)
                 break
 
@@ -176,7 +235,7 @@ export default class LeaderboardCommand implements Command {
             where: { snowflake: interaction.guildId }
         })
 
-        if (guildRow === null || !guildRow) {
+        if (!guildRow || guildRow === null) {
             bot.logger.error('Failed to locate guild in database')
             await interaction.reply(
                 'An error has occured, please try again later'
@@ -186,7 +245,7 @@ export default class LeaderboardCommand implements Command {
         }
 
         const channel = interaction.options.getChannel('channel')
-        if (channel === null) {
+        if (!channel || channel === null) {
             bot.logger.error('Failed to resolve channel option')
             await interaction.reply(
                 'An error occured while locating the channel for the leaderboard'
@@ -240,7 +299,7 @@ export default class LeaderboardCommand implements Command {
             where: { snowflake: interaction.guildId }
         })
 
-        if (guildRow === null || !guildRow) {
+        if (!guildRow || guildRow === null) {
             bot.logger.error('Failed to locate guild in database')
             await interaction.reply(
                 'An error has occured, please try again later'
@@ -302,8 +361,162 @@ export default class LeaderboardCommand implements Command {
         bot: Accomplice,
         interaction: ChatInputCommandInteraction
     ): Promise<void> {
-        console.log(bot, interaction)
+        const { Tracker, Guild } = bot.sequelize.models
+
+        const reaction = interaction.options.getString('reaction')
+        const displayName = interaction.options.getString('name')
+        const trackerLength = interaction.options.getInteger('length')
+
+        // We shouldn't hit this, but for type safety & sanity we'll check it
+        if (!reaction || reaction === null) {
+            bot.logger.debug('No reaction supplied, will not create tracker')
+            await interaction.reply('Please supply a reaction to track')
+            return
+        }
+
+        if (displayName && displayName.length > 32) {
+            bot.logger.debug(
+                'Display name is too long, will not create tracker'
+            )
+            await interaction.reply(
+                `The name you specified ${inlineCode(
+                    displayName
+                )} is over the 32 character name limit. Please correct this and try again.`
+            )
+            return
+        }
+
+        // https://gist.github.com/sindresorhus/a39789f98801d908bbc7ff3ecc99d99c
+        const hasEmoji = (await import('node-emoji')).hasEmoji // ESM lmao
+
+        const emoteRegex = /(<a?)?:\w+:(\d+)?/g
+        const guildEmojiNumbers = emoteRegex.exec(reaction)?.[2]
+        const isRegularEmoji = hasEmoji(reaction)
+        let reactionType: ReactionType | undefined
+        let reactionContent: string | undefined
+
+        if (isRegularEmoji) {
+            reactionType = ReactionType.Emoji
+            reactionContent = reaction
+        } else if (guildEmojiNumbers) {
+            const guildEmoji = bot.emojis.cache.get(guildEmojiNumbers)
+            if (guildEmoji) {
+                reactionType = ReactionType.Custom
+                if (guildEmoji.animated) ReactionType.CustomGIF
+                reactionContent = guildEmoji.id
+            } else {
+                bot.logger.error('Failed to parse discord emoji')
+                await interaction.reply(
+                    'An issue occured while trying to parse the supplied reaction. Please rename it or try another one'
+                )
+                return
+            }
+        } else {
+            bot.logger.error('Unknown content supplied as reaction')
+            await interaction.reply(
+                'The reaction you have supplied is unsupported. Please try another one'
+            )
+            return
+        }
+
+        const guild: Guild = await Guild.findOne({
+            where: { snowflake: interaction.guildId }
+        })
+
+        if (!guild || guild === null) {
+            bot.logger.error("Couldn't locate guild")
+            await interaction.reply(
+                'An error occured while trying to lookup your guild. Please try again later.'
+            )
+            return
+        }
+
+        const [tracker, created]: [Tracker, boolean] =
+            await Tracker.findOrCreate({
+                where: {},
+                defaults: {
+                    uuid: uuidv4(),
+                    guildId: guild.uuid,
+                    name: displayName,
+                    length: trackerLength,
+                    reactionType,
+                    reactionContent
+                }
+            })
+
+        if (created) {
+            bot.logger.debug('Tracker already exists')
+            await interaction.reply(
+                `The tracker you are trying to create already exists. To view trackers available to this guild, use the ${inlineCode(
+                    '/leaderboard trackers'
+                )} command. If you'd like to use this tracker, use the ${inlineCode(
+                    '/leaderboard track'
+                )} command. For example ${inlineCode(
+                    `/leaderboard track channel:"#Rules" tracker:"${tracker.uuid}"`
+                )}`
+            )
+        } else {
+            await interaction.reply(
+                `Your tracker has been created with identifier ${inlineCode(
+                    tracker.uuid
+                )}${
+                    displayName
+                        ? ` and display name ${inlineCode(displayName)}.`
+                        : '.'
+                }. To view trackers available to this guild, use the ${inlineCode(
+                    '/leaderboard trackers'
+                )} command. If you'd like to use this tracker, use the ${inlineCode(
+                    '/leaderboard track'
+                )} command. For example ${inlineCode(
+                    `/leaderboard track channel:"#Rules" tracker:"${tracker.uuid}"`
+                )}`
+            )
+        }
     }
+
+    // private async createTracker(
+    //     bot: Accomplice,
+    //     interaction: ChatInputCommandInteraction
+    // ): Promise<void> {
+    //     const { Leaderboard, Tracker } = bot.sequelize.models
+    //     const channel = await interaction.options.getChannel('channel')
+
+    //     if (!channel || channel === null) {
+    //         bot.logger.error('Failed to resolve channel option')
+    //         await interaction.reply(
+    //             'An error occured while locating the channel for the leaderboard'
+    //         )
+
+    //         return
+    //     }
+
+    //     const leaderboard: Leaderboard = await Leaderboard.findOne({
+    //         where: { channelSnowflake: channel.id }
+    //     })
+
+    //     if (!leaderboard || leaderboard === null) {
+    //         bot.logger.error(`Failed to locate guild in database`)
+    //         await interaction.reply(
+    //             'An error has occured, please try again later'
+    //         )
+
+    //         return
+    //     }
+
+    //     const tracker: Tracker = await Tracker.findOne({
+    //         where: { channelSnowflake: channel.id }
+    //     })
+
+    //     if (tracker !== null) {
+    //         bot.logger.debug(
+    //             'The requested tracker already exists, will not create'
+    //         )
+    //         await interaction.reply(
+    //             'The tracker you have tried to create already exists on this leaderboard. Please track a different react, or track this react on a different leaderboard.'
+    //         )
+    //         return
+    //     }
+    // }
 
     private async listLeaderboard(
         bot: Accomplice,
@@ -314,7 +527,7 @@ export default class LeaderboardCommand implements Command {
             where: { snowflake: interaction.guildId }
         })
 
-        if (guildRow === null || !guildRow) {
+        if (!guildRow || guildRow === null) {
             bot.logger.error(`Failed to locate guild in database`)
             await interaction.reply(
                 'An error has occured, please try again later'

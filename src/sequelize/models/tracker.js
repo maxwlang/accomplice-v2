@@ -14,8 +14,9 @@ module.exports = (sequelize, DataTypes) => {
     Tracker.init(
         {
             uuid: { type: DataTypes.UUID, unique: true },
-            name: { type: DataTypes.STRING, allowNull: true }, // Unique per-guild, not a unique column
-            maxEntries: {
+            guildId: { type: DataTypes.UUID, allowNull: false },
+            name: { type: DataTypes.STRING, allowNull: true },
+            length: {
                 type: DataTypes.INTEGER,
                 allowNull: false,
                 defaultValue: 10

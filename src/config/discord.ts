@@ -1,8 +1,7 @@
 export const token =
     process.env['DISCORD_TOKEN'] ||
-    'MTA0NTE1MDc2OTM4MjQyNDU4Ng.G-b-f5.FYvO7sRjsBGxDE1ZJqsKcFQ7CKiR0-NtWaNYuY'
-
-export const avatarUrl = process.env['DISCORD_AVATAR_URL']
+    // 'MTA0NTE1MDc2OTM4MjQyNDU4Ng.G-b-f5.FYvO7sRjsBGxDE1ZJqsKcFQ7CKiR0-NtWaNYuY'
+    'NzMzOTI5MDU0OTMxMjU1MzI3.GNfX7W.solZTu9NpyPiDrNcv031EHkGqqsGaAfqwRsQUM'
 
 export const avatarDisplayName =
     process.env['DISCORD_DISPLAY_NAME'] || 'Accomplice V2'

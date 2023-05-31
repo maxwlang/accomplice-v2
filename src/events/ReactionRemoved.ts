@@ -25,6 +25,8 @@ export default class ReactionRemoved implements EventHandle {
         const reactorUser = args[1] as DiscordUser
         const { User, Reaction } = bot.sequelize.models
 
+        if (reactorUser.id === bot.user?.id) return
+
         bot.logger.debug('User has removed a react')
 
         // When a reaction is received, check if the structure is partial

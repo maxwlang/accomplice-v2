@@ -4,6 +4,9 @@ export interface LeaderboardTrackers {
     // A unique guid for the leaderboard tracker
     uuid: uuid
 
+    // The uuid for the guild, links with uuid on the Guild table
+    guildId: uuid
+
     // The uuid for the leaderboard this tracker associates with, links with uuid on the Leaderboard table
     leaderboardId: uuid
 

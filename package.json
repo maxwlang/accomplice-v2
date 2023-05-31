@@ -7,6 +7,7 @@
     "@types/uuid": "^9.0.1",
     "discord.js": "^14.11.0",
     "mariadb": "^3.1.2",
+    "node-emoji": "^2.0.2",
     "ramda": "^0.29.0",
     "redis": "^4.6.6",
     "sequelize": "^6.31.1",
@@ -23,6 +24,7 @@
   },
   "devDependencies": {
     "@types/node": "^18.15.11",
+    "@types/node-emoji": "^1.8.2",
     "@types/ramda": "^0.29.2",
     "@types/redis": "^4.0.11",
     "@types/sequelize": "^4.28.15",

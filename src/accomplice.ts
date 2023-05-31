@@ -6,9 +6,11 @@ import {
     Collection,
     Events as DiscordEvents,
     Routes as DiscordRestRoutes,
+    GuildTextBasedChannel,
     IntentsBitField,
     OAuth2Guild,
     Partials,
+    PermissionFlagsBits,
     RESTPostAPIChatInputApplicationCommandsJSONBody
 } from 'discord.js'
 import { RedisClientType, createClient } from 'redis'
@@ -21,6 +23,8 @@ import { redisPrefix } from './config/redis'
 import { v4 as uuidv4 } from 'uuid'
 import Command from './types/Command'
 import LeaderboardEmbed from './embeds/Leaderboard'
+import ApplicationCommandRateLimit from './embeds/ApplicationCommandRateLimit'
+import CommandsRegistered from './embeds/CommandsRegistered'
 
 export default class Accomplice extends Client {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -46,10 +50,9 @@ export default class Accomplice extends Client {
         this.logger = logger
         this.sequelize = sequelize
         this.commands = new Collection()
+        this.timers = new Collection()
 
         // this.periodicSync = null
-        // this.statusEmbed = null
-        // this.statusEmbedIndex = 0
         // this.syncing = false
         // this.db = db
     }
@@ -60,6 +63,7 @@ export default class Accomplice extends Client {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     public sequelize: any // Stupid sequelize shit
     public commands: Collection<string, Command>
+    public timers: Collection<string, NodeJS.Timer>
 
     private async registerEvents(): Promise<void> {
         await readdir('./dist/events')
@@ -141,7 +145,80 @@ export default class Accomplice extends Client {
         })
     }
 
-    public async registerCommands(guildId?: string): Promise<void> {
+    private async handleCommandRateLimitError(
+        e: { code: number },
+        guildId: string
+    ): Promise<void> {
+        if (e.code === 30034) {
+            if (this.timers.get(`${guildId}_slash-commands`) !== undefined) {
+                this.timers.delete(`${guildId}_slash-commands`)
+            }
+
+            this.logger.info(
+                `Guild ${guildId} has been put on a command register timer`
+            )
+            this.timers.set(
+                `${guildId}_slash-commands`,
+                setTimeout(() => {
+                    this.logger.info(
+                        `Attempting to register commands for guild ${guildId}`
+                    )
+                    this.registerCommands(guildId, true)
+                }, 900_000)
+            )
+
+            const channel = this.findPublicChannel(guildId)
+
+            if (channel) {
+                const rateLimitEmbed =
+                    new ApplicationCommandRateLimit().getEmbed()
+                channel
+                    .send({
+                        embeds: [rateLimitEmbed]
+                    })
+                    .catch(e =>
+                        this.logger.error(`Failed to send hello message: ${e}`)
+                    )
+            }
+        } else throw e
+    }
+
+    public findPublicChannel(
+        guildId: string
+    ): GuildTextBasedChannel | undefined {
+        const guild = this.guilds.cache.get(guildId)
+
+        if (!guild) {
+            this.logger.error(
+                `Could not find a public channel on guild ${guildId}, undefined guild id.`
+            )
+            return
+        }
+
+        const userId = this.user?.id
+        if (!userId) {
+            this.logger.error(
+                `Could not find a public channel on guild ${userId}, undefined user id.`
+            )
+            return
+        }
+
+        const channel = guild.channels.cache.find(
+            channel =>
+                (channel.type === ChannelType.GuildText &&
+                    channel.members
+                        .get(userId)
+                        ?.permissions.has(PermissionFlagsBits.SendMessages)) ??
+                false
+        ) as GuildTextBasedChannel | undefined
+
+        return channel
+    }
+
+    public async registerCommands(
+        guildId?: string,
+        retry?: boolean
+    ): Promise<boolean | void> {
         await readdir('./dist/commands')
             .then((files: string[]) =>
                 files.filter(file => file.endsWith('.js'))
@@ -179,29 +256,76 @@ export default class Accomplice extends Client {
                         this.logger.debug(
                             `Registering commands with guild ${guildId}`
                         )
-                        await this.rest.put(
-                            DiscordRestRoutes.applicationGuildCommands(
-                                userId,
-                                guildId
-                            ),
-                            {
-                                body: commandsJSONArray
-                            }
-                        )
-                    } else {
-                        for (const guildCollection of await this.guilds.fetch()) {
-                            this.logger.debug(
-                                `Registering commands with guild "${guildCollection[1].name}" (${guildCollection[1].id})`
-                            )
-                            await this.rest.put(
+                        return await this.rest
+                            .put(
                                 DiscordRestRoutes.applicationGuildCommands(
                                     userId,
-                                    guildCollection[1].id
+                                    guildId
                                 ),
                                 {
                                     body: commandsJSONArray
                                 }
                             )
+                            .then(() => {
+                                if (retry) {
+                                    this.timers.delete(
+                                        `${guildId}_slash-commands`
+                                    )
+
+                                    const channel =
+                                        this.findPublicChannel(guildId)
+
+                                    if (channel) {
+                                        const commandsRegisteredEmbed =
+                                            new CommandsRegistered().getEmbed()
+                                        channel
+                                            .send({
+                                                embeds: [
+                                                    commandsRegisteredEmbed
+                                                ]
+                                            })
+                                            .catch(e =>
+                                                this.logger.error(
+                                                    `Failed to send commands registered notification: ${e}`
+                                                )
+                                            )
+                                    }
+                                }
+                                return true
+                            })
+                            .catch(e => {
+                                if (!retry) {
+                                    this.handleCommandRateLimitError(e, guildId)
+                                } else {
+                                    this.logger.error(
+                                        'Failed to register commands for guild again'
+                                    )
+                                }
+                                return false
+                            })
+                    } else {
+                        for (const guildCollection of await this.guilds.fetch()) {
+                            this.logger.debug(
+                                `Registering commands with guild "${guildCollection[1].name}" (${guildCollection[1].id})`
+                            )
+                            await this.rest
+                                .put(
+                                    DiscordRestRoutes.applicationGuildCommands(
+                                        userId,
+                                        guildCollection[1].id
+                                    ),
+                                    {
+                                        body: commandsJSONArray
+                                    }
+                                )
+                                .catch(e => {
+                                    if (!retry) {
+                                        this.handleCommandRateLimitError(
+                                            e,
+                                            guildCollection[1].id
+                                        )
+                                    } else throw e
+                                })
                         }
                     }
                 } catch (e) {

@@ -14,6 +14,7 @@ module.exports = (sequelize, DataTypes) => {
     LeaderboardTrackers.init(
         {
             uuid: { type: DataTypes.UUID, unique: true, allowNull: false },
+            guildId: { type: DataTypes.UUID, allowNull: false },
             leaderboardId: { type: DataTypes.UUID, allowNull: false },
             trackerId: { type: DataTypes.UUID, allowNull: false, unique: true } // A tracker may only exist on one leaderboard
         },

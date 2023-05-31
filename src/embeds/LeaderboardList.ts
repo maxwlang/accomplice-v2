@@ -2,6 +2,7 @@ import { EmbedBuilder, bold, channelMention } from 'discord.js'
 import Embed from '../types/Embed'
 import { Leaderboard } from '../sequelize/types/leaderboard'
 import { isEmpty } from 'ramda'
+import { avatarDisplayName } from '../config/discord'
 
 export default class LeaderboardList implements Embed {
     public getEmbed(leaderboards: Leaderboard[]): EmbedBuilder {
@@ -9,8 +10,9 @@ export default class LeaderboardList implements Embed {
             .setTitle('Leaderboards')
             .setColor('Blue')
             .setTimestamp()
-            .setFooter({ text: 'Accomplice' })
-        // iconURL: 'https://i.imgur.com/AfFp7pu.png'
+            .setFooter({
+                text: `Powered By ${avatarDisplayName}`
+            })
 
         if (!leaderboards || isEmpty(leaderboards)) {
             return embed

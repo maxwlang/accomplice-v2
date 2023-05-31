@@ -1,8 +1,9 @@
-import { Guild } from 'discord.js'
+import { Guild, Message } from 'discord.js'
 import Accomplice from '../accomplice'
 import EventHandle from '../types/EventHandle'
 import { v4 as uuidv4 } from 'uuid'
 import { isEmpty } from 'ramda'
+import Welcome from '../embeds/Welcome'
 
 export default class GuildJoin implements EventHandle {
     public name = 'Guild Joined'
@@ -32,6 +33,34 @@ export default class GuildJoin implements EventHandle {
             }
         })
 
-        await bot.registerCommands(guild.id)
+        // Reaction Indexing
+
+        // Welcome message
+        let welcomeMessage: Message<true> | undefined
+        const channel = bot.findPublicChannel(guild.id)
+
+        if (channel) {
+            const welcomeEmbed = new Welcome().getEmbed(
+                bot.user?.displayAvatarURL({ size: 256 })
+            )
+            welcomeMessage = await channel
+                .send({
+                    embeds: [welcomeEmbed]
+                })
+                .catch(e => {
+                    bot.logger.error(`Failed to send hello message: ${e}`)
+                    return undefined
+                })
+        }
+
+        // Register slash commands
+        const registerResult = await bot.registerCommands(guild.id)
+        if (welcomeMessage) {
+            if (registerResult) {
+                await welcomeMessage.react('✅')
+            } else {
+                await welcomeMessage.react('❌')
+            }
+        }
     }
 }

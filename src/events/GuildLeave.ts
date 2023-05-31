@@ -19,7 +19,15 @@ export default class GuildLeave implements EventHandle {
     }): Promise<void> => {
         if (!args || isEmpty(args)) return
         const guild = args[0] as Guild
-        const { Guild } = bot.sequelize.models
+        const {
+            Guild,
+            Starboard,
+            Leaderboard,
+            Reaction,
+            GuildUsers,
+            LeaderboardTrackers,
+            Tracker
+        } = bot.sequelize.models
 
         bot.logger.info(`Left guild "${guild.name}" (${guild.id})`)
 
@@ -31,10 +39,51 @@ export default class GuildLeave implements EventHandle {
             return
         }
 
-        await Guild.destroy({
-            where: {
-                uuid: guildRow.uuid
+        // Stop and remove any guild timers
+        bot.timers.findKey((timer, key) => {
+            if (key.startsWith(`${guild.id}_`)) {
+                clearInterval(timer)
+                bot.timers.delete(key)
             }
         })
+
+        // Remove data
+        await Promise.all([
+            Guild.destroy({
+                where: {
+                    uuid: guildRow.uuid
+                }
+            }),
+            Starboard.destroy({
+                where: {
+                    guildId: guildRow.uuid
+                }
+            }),
+            Leaderboard.destroy({
+                where: {
+                    guildId: guildRow.uuid
+                }
+            }),
+            Reaction.destroy({
+                where: {
+                    guildId: guildRow.uuid
+                }
+            }),
+            GuildUsers.destroy({
+                where: {
+                    guildId: guildRow.uuid
+                }
+            }),
+            LeaderboardTrackers.destroy({
+                where: {
+                    guildId: guildRow.uuid
+                }
+            }),
+            Tracker.destroy({
+                where: {
+                    guildId: guildRow.uuid
+                }
+            })
+        ])
     }
 }

@@ -22,6 +22,9 @@ export default class ReactionAdded implements EventHandle {
         if (!args || isEmpty(args)) return
         const messageReaction = args[0] as MessageReaction
         const reactorUser = args[1] as DiscordUser
+
+        if (reactorUser.id === bot.user?.id) return
+
         const { User, Reaction } = bot.sequelize.models
 
         bot.logger.debug('User has reacted')
