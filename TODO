@@ -2,7 +2,7 @@
 - MariaDB
 - Build out reaction indexing
 - Start starboard
-- Finish leaderboard tracker destroy
-- Finish leaderboard tracker list
 - Finish leaderboard track
 - Finish leaderboard untrack
+- For required options, set second arg to true on interaction.options.get<whatever>(..., true)
+- Fix issue where gif emotes are registered as non-gif custom emotes

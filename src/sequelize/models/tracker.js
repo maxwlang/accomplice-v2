@@ -18,8 +18,7 @@ module.exports = (sequelize, DataTypes) => {
             name: { type: DataTypes.STRING, allowNull: true },
             length: {
                 type: DataTypes.INTEGER,
-                allowNull: false,
-                defaultValue: 10
+                allowNull: false
             },
 
             // At least one of these needs to be provided:
