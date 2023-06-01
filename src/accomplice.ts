@@ -456,7 +456,6 @@ export default class Accomplice extends Client {
                 embeds: [leaderboardEmbed.getEmbed({ leaderboard })]
             })
 
-            // Change everyone without a last name to "Doe"
             await Leaderboard.update(
                 { messageSnowflake: message.id },
                 {

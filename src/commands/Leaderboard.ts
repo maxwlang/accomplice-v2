@@ -12,10 +12,8 @@ import { Guild } from '../sequelize/types/guild'
 import { Tracker } from '../sequelize/types/tracker'
 import { v4 as uuidv4 } from 'uuid'
 import { ReactionType } from '../sequelize/types/reaction'
+import { hasEmoji } from '../util/emoji'
 // import { Tracker } from '../sequelize/types/tracker'
-
-// https://gist.github.com/sindresorhus/a39789f98801d908bbc7ff3ecc99d99c // CBA / TMI
-import { has as hasEmoji } from '../submodules/node-emoji/src' // Submodule because of ESM fuckery
 
 export default class LeaderboardCommand implements Command {
     // Should be admin perms
@@ -399,7 +397,9 @@ export default class LeaderboardCommand implements Command {
             reactionType = ReactionType.Emoji
             reactionContent = reaction
         } else if (guildEmojiNumbers) {
+            console.log(guildEmojiNumbers)
             const guildEmoji = bot.emojis.cache.get(guildEmojiNumbers)
+            console.log(guildEmoji)
             if (guildEmoji) {
                 reactionType = ReactionType.Custom
                 if (guildEmoji.animated) ReactionType.CustomGIF
@@ -407,7 +407,7 @@ export default class LeaderboardCommand implements Command {
             } else {
                 bot.logger.error('Failed to parse discord emoji')
                 await interaction.reply(
-                    'An issue occured while trying to parse the supplied reaction. Please rename it or try another one'
+                    'An issue occured while trying to parse the supplied reaction. Please rename it or try another one. When using custom emotes, for now you must only use emotes available on this server.'
                 )
                 return
             }
@@ -433,7 +433,12 @@ export default class LeaderboardCommand implements Command {
 
         const [tracker, created]: [Tracker, boolean] =
             await Tracker.findOrCreate({
-                where: {},
+                where: {
+                    guildId: guild.uuid,
+                    name: displayName,
+                    reactionType,
+                    reactionContent
+                },
                 defaults: {
                     uuid: uuidv4(),
                     guildId: guild.uuid,
@@ -445,9 +450,15 @@ export default class LeaderboardCommand implements Command {
             })
 
         if (created) {
-            bot.logger.debug('Tracker already exists')
+            // TODO: Make these embeds
             await interaction.reply(
-                `The tracker you are trying to create already exists. To view trackers available to this guild, use the ${inlineCode(
+                `Your tracker has been created with identifier ${inlineCode(
+                    tracker.uuid
+                )}${
+                    displayName
+                        ? ` and display name ${inlineCode(displayName)}.`
+                        : '.'
+                } To view trackers available to this guild, use the ${inlineCode(
                     '/leaderboard trackers'
                 )} command. If you'd like to use this tracker, use the ${inlineCode(
                     '/leaderboard track'
@@ -456,14 +467,9 @@ export default class LeaderboardCommand implements Command {
                 )}`
             )
         } else {
+            bot.logger.debug('Tracker already exists')
             await interaction.reply(
-                `Your tracker has been created with identifier ${inlineCode(
-                    tracker.uuid
-                )}${
-                    displayName
-                        ? ` and display name ${inlineCode(displayName)}.`
-                        : '.'
-                }. To view trackers available to this guild, use the ${inlineCode(
+                `The tracker you are trying to create already exists. To view trackers available to this guild, use the ${inlineCode(
                     '/leaderboard trackers'
                 )} command. If you'd like to use this tracker, use the ${inlineCode(
                     '/leaderboard track'

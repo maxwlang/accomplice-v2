@@ -6,6 +6,7 @@
   "dependencies": {
     "@types/uuid": "^9.0.1",
     "discord.js": "^14.11.0",
+    "emojilib": "^3.0.10",
     "mariadb": "^3.1.2",
     "ramda": "^0.29.0",
     "redis": "^4.6.6",
