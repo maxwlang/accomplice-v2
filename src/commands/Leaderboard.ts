@@ -13,6 +13,9 @@ import { Tracker } from '../sequelize/types/tracker'
 import { v4 as uuidv4 } from 'uuid'
 import { ReactionType } from '../sequelize/types/reaction'
 import { hasEmoji } from '../util/emoji'
+import { LeaderboardTrackers } from '../sequelize/types/leaderboard_trackers'
+import TrackerList from '../embeds/TrackerList'
+import { isEmpty } from 'ramda'
 // import { Tracker } from '../sequelize/types/tracker'
 
 export default class LeaderboardCommand implements Command {
@@ -34,10 +37,10 @@ export default class LeaderboardCommand implements Command {
                         .setRequired(true)
                 )
         )
-        // Leaderboard - remove
+        // Leaderboard - destroy
         .addSubcommand(subCommand =>
             subCommand
-                .setName('remove')
+                .setName('destroy')
                 .setDescription('Removes a leaderboard from a channel')
                 .addChannelOption(option =>
                     option
@@ -46,6 +49,14 @@ export default class LeaderboardCommand implements Command {
                             'The channel you wish to remove the leaderboard from'
                         )
                         .setRequired(true)
+                )
+                .addBooleanOption(option =>
+                    option
+                        .setName('confirm')
+                        .setRequired(true)
+                        .setDescription(
+                            'This will permanently remove the leaderboard from the guild.'
+                        )
                 )
         )
         // Leaderboard - tracker-create
@@ -87,19 +98,19 @@ export default class LeaderboardCommand implements Command {
                 .setDescription(
                     'Removed a tracker from the guild and all leaderboards'
                 )
-                .addChannelOption(option =>
+                .addStringOption(option =>
                     option
-                        .setName('channel')
+                        .setName('id')
                         .setDescription(
-                            "The channel with the leaderboard you'd like to remove a tracker from"
+                            'The tracker id. Find it with /leaderboard trackers'
                         )
                         .setRequired(true)
                 )
-                .addStringOption(option =>
+                .addBooleanOption(option =>
                     option
-                        .setName('reaction')
+                        .setName('confirm')
                         .setDescription(
-                            'The reaction to stop tracking (emoji, custom emote)'
+                            'This will remove the tracker from all leaderboards on the guild.'
                         )
                         .setRequired(true)
                 )
@@ -206,12 +217,26 @@ export default class LeaderboardCommand implements Command {
                 await this.createLeaderboard(bot, interaction)
                 break
 
-            case 'remove': // Done
-                await this.removeLeaderboard(bot, interaction)
+            case 'destroy': // Done
+                await this.destroyLeaderboard(bot, interaction)
                 break
 
-            case 'tracker-create': // TODO
+            case 'tracker-create': // Done
                 await this.createTracker(bot, interaction)
+                break
+
+            case 'tracker-destroy': // Done
+                await this.destroyTracker(bot, interaction)
+                break
+
+            case 'trackers': // TODO
+                await this.listTrackers(bot, interaction)
+                break
+
+            case 'track': // TODO
+                break
+
+            case 'untrack': // TODO
                 break
 
             case 'list': // Done
@@ -291,10 +316,19 @@ export default class LeaderboardCommand implements Command {
         }
     }
 
-    private async removeLeaderboard(
+    private async destroyLeaderboard(
         bot: Accomplice,
         interaction: ChatInputCommandInteraction
     ): Promise<void> {
+        const actionConfirm = interaction.options.getBoolean('confirm', true)
+        if (!actionConfirm) {
+            await interaction.reply(
+                'Please confirm this destructive action using the `confirm` command argument.'
+            )
+
+            return
+        }
+
         const { Guild, Leaderboard, LeaderboardTrackers } = bot.sequelize.models
         const guildRow: Guild | null = await Guild.findOne({
             where: { snowflake: interaction.guildId }
@@ -366,7 +400,7 @@ export default class LeaderboardCommand implements Command {
 
         const reaction = interaction.options.getString('reaction')
         const displayName = interaction.options.getString('name')
-        const trackerLength = interaction.options.getInteger('length')
+        const trackerLength = interaction.options.getInteger('length') ?? 9
 
         // We shouldn't hit this, but for type safety & sanity we'll check it
         if (!reaction || reaction === null) {
@@ -478,6 +512,163 @@ export default class LeaderboardCommand implements Command {
                 )}`
             )
         }
+    }
+
+    private async destroyTracker(
+        bot: Accomplice,
+        interaction: ChatInputCommandInteraction
+    ): Promise<void> {
+        const actionConfirm = interaction.options.getBoolean('confirm', true)
+        if (!actionConfirm) {
+            await interaction.reply(
+                'Please confirm this destructive action using the `confirm` command argument.'
+            )
+
+            return
+        }
+
+        const { Guild, LeaderboardTrackers, Tracker } = bot.sequelize.models
+        const guildRow: Guild | null = await Guild.findOne({
+            where: { snowflake: interaction.guildId }
+        })
+
+        if (!guildRow || guildRow === null) {
+            bot.logger.error('Failed to locate guild in database')
+            await interaction.reply(
+                'An error has occured, please try again later'
+            )
+
+            return
+        }
+
+        const trackerId = interaction.options.getString('id', true)
+
+        const tracker: Tracker | null = await Tracker.findOne({
+            where: {
+                uuid: trackerId,
+                guildId: guildRow.uuid
+            }
+        })
+
+        if (!tracker || tracker === null) {
+            await interaction.reply(
+                `The tracker ${channelMention(
+                    trackerId
+                )} does not exist. If you would like to add a tracker please use the ${inlineCode(
+                    '/leaderboard tracker-create'
+                )} command.`
+            )
+            return
+        }
+
+        await Tracker.destroy({
+            where: {
+                uuid: tracker.uuid
+            }
+        })
+
+        const leaderboardTrackerLinks: LeaderboardTrackers[] =
+            await LeaderboardTrackers.findAll({
+                where: {
+                    trackerId: tracker.uuid
+                }
+            })
+
+        await LeaderboardTrackers.destroy({
+            where: {
+                trackerId: tracker.uuid
+            }
+        })
+
+        // Update any embeds to reflect new changes
+        for (const leaderboardTrackerLink of leaderboardTrackerLinks) {
+            await bot.createOrUpdateLeaderboardEmbed(
+                leaderboardTrackerLink.leaderboardId
+            )
+        }
+
+        await interaction.reply(
+            `The tracker ${inlineCode(tracker.uuid)} has been destroyed.`
+        )
+    }
+
+    private async listTrackers(
+        bot: Accomplice,
+        interaction: ChatInputCommandInteraction
+    ): Promise<void> {
+        const { Guild, Tracker, Leaderboard, LeaderboardTrackers } =
+            bot.sequelize.models
+        const guildRow: Guild | null = await Guild.findOne({
+            where: { snowflake: interaction.guildId }
+        })
+
+        if (!guildRow || guildRow === null) {
+            bot.logger.error(`Failed to locate guild in database`)
+            await interaction.reply(
+                'An error has occured, please try again later'
+            )
+
+            return
+        }
+
+        let trackers: Tracker[] = []
+        const extraArgs = {}
+        const channelId = interaction.options.getChannel('channel')?.id
+        if (channelId) {
+            // All trackers on channel
+            const leaderboard: Leaderboard | null = await Leaderboard.findOne({
+                where: {
+                    channelSnowflake: channelId
+                }
+            })
+
+            if (!leaderboard) {
+                await interaction.reply(
+                    'There is no leaderboard for the supplied channel'
+                )
+                return
+            }
+
+            const leaderboardTrackers: LeaderboardTrackers[] =
+                await LeaderboardTrackers.findAll({
+                    where: {
+                        guildId: guildRow.uuid,
+                        leaderboardId: leaderboard.uuid
+                    }
+                })
+
+            if (isEmpty(leaderboardTrackers)) {
+                await interaction.reply(
+                    'There are no trackers on this leaderboard'
+                )
+                return
+            }
+
+            for (const leaderboardTracker of leaderboardTrackers) {
+                const tracker: Tracker | null = await Tracker.findOnce({
+                    where: {
+                        guildId: guildRow.uuid,
+                        uuid: leaderboardTracker.trackerId
+                    }
+                })
+
+                if (tracker) trackers.push(tracker)
+            }
+        } else {
+            // All guild trackers
+            trackers = await Tracker.findAll({
+                where: {
+                    guildId: guildRow.uuid,
+                    ...extraArgs
+                }
+            })
+        }
+
+        const trackerListEmbed = new TrackerList().getEmbed({ trackers })
+
+        await interaction.reply({
+            embeds: [trackerListEmbed]
+        })
     }
 
     // private async createTracker(
