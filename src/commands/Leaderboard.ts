@@ -14,6 +14,9 @@ import { v4 as uuidv4 } from 'uuid'
 import { ReactionType } from '../sequelize/types/reaction'
 // import { Tracker } from '../sequelize/types/tracker'
 
+// https://gist.github.com/sindresorhus/a39789f98801d908bbc7ff3ecc99d99c // CBA / TMI
+import { has as hasEmoji } from '../submodules/node-emoji/src' // Submodule because of ESM fuckery
+
 export default class LeaderboardCommand implements Command {
     // Should be admin perms
     public meta = new SlashCommandBuilder()
@@ -385,9 +388,6 @@ export default class LeaderboardCommand implements Command {
             )
             return
         }
-
-        // https://gist.github.com/sindresorhus/a39789f98801d908bbc7ff3ecc99d99c
-        const hasEmoji = (await import('node-emoji')).hasEmoji // ESM lmao
 
         const emoteRegex = /(<a?)?:\w+:(\d+)?/g
         const guildEmojiNumbers = emoteRegex.exec(reaction)?.[2]
