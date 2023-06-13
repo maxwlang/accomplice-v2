@@ -234,6 +234,7 @@ export default class LeaderboardCommand implements Command {
                 break
 
             case 'track': // TODO
+                await this.track(bot, interaction)
                 break
 
             case 'untrack': // TODO
@@ -671,49 +672,45 @@ export default class LeaderboardCommand implements Command {
         })
     }
 
-    // private async createTracker(
-    //     bot: Accomplice,
-    //     interaction: ChatInputCommandInteraction
-    // ): Promise<void> {
-    //     const { Leaderboard, Tracker } = bot.sequelize.models
-    //     const channel = await interaction.options.getChannel('channel')
+    private async track(
+        bot: Accomplice,
+        interaction: ChatInputCommandInteraction
+    ): Promise<void> {
+        const { Leaderboard, Tracker } = bot.sequelize.models
+        const channel = await interaction.options.getChannel('channel')
+        if (!channel || channel === null) {
+            bot.logger.error('Failed to resolve channel option')
+            await interaction.reply(
+                'An error occured while locating the channel for the leaderboard'
+            )
+            return
+        }
+        const leaderboard: Leaderboard = await Leaderboard.findOne({
+            where: { channelSnowflake: channel.id }
+        })
+        if (!leaderboard || leaderboard === null) {
+            bot.logger.error(`Failed to locate guild in database`)
+            await interaction.reply(
+                'An error has occured, please try again later'
+            )
+            return
+        }
 
-    //     if (!channel || channel === null) {
-    //         bot.logger.error('Failed to resolve channel option')
-    //         await interaction.reply(
-    //             'An error occured while locating the channel for the leaderboard'
-    //         )
-
-    //         return
-    //     }
-
-    //     const leaderboard: Leaderboard = await Leaderboard.findOne({
-    //         where: { channelSnowflake: channel.id }
-    //     })
-
-    //     if (!leaderboard || leaderboard === null) {
-    //         bot.logger.error(`Failed to locate guild in database`)
-    //         await interaction.reply(
-    //             'An error has occured, please try again later'
-    //         )
-
-    //         return
-    //     }
-
-    //     const tracker: Tracker = await Tracker.findOne({
-    //         where: { channelSnowflake: channel.id }
-    //     })
-
-    //     if (tracker !== null) {
-    //         bot.logger.debug(
-    //             'The requested tracker already exists, will not create'
-    //         )
-    //         await interaction.reply(
-    //             'The tracker you have tried to create already exists on this leaderboard. Please track a different react, or track this react on a different leaderboard.'
-    //         )
-    //         return
-    //     }
-    // }
+        // find a tracker by uuid passed in
+        const trackerId = await interaction.options.getString('tracker-id')
+        const tracker: Tracker = await Tracker.findOne({
+            where: { channelSnowflake: channel.id }
+        })
+        if (tracker !== null) {
+            bot.logger.debug(
+                'The requested tracker already exists, will not create'
+            )
+            await interaction.reply(
+                'The tracker you have tried to create already exists on this leaderboard. Please track a different react, or track this react on a different leaderboard.'
+            )
+            return
+        }
+    }
 
     private async listLeaderboard(
         bot: Accomplice,
