@@ -252,11 +252,50 @@ export default class Accomplice extends Client {
                         userId = (await this.user?.fetch())?.id
                     }
 
+                    let guildCollection: Collection<string, OAuth2Guild> =
+                        await this.guilds.fetch()
+
+                    // When updating a specific guild
                     if (guildId) {
+                        const guild = guildCollection.get(guildId)
+                        if (!guild) {
+                            throw new Error('Could not locate guild')
+                        }
+
+                        guildCollection = new Collection<
+                            string,
+                            OAuth2Guild
+                        >().set(guildId, guild)
+                    }
+
+                    const { Guild } = this.sequelize.models
+
+                    for (const [guildId, guild] of guildCollection) {
                         this.logger.debug(
-                            `Registering commands with guild ${guildId}`
+                            `Checking guild commands state for guild "${guild.name}" (${guildId})`
                         )
-                        return await this.rest
+
+                        const guildRow: Guild = await Guild.findOne({
+                            where: {
+                                snowflake: guildId
+                            }
+                        })
+
+                        if (!guildRow) {
+                            throw new Error(
+                                'Could not locate guild during command update'
+                            )
+                        }
+
+                        console.log(guildRow.commandsState)
+
+                        console.log(JSON.stringify(commandsJSONArray))
+
+                        this.logger.debug(
+                            `Registering commands with guild "${guild.name}" (${guildId})`
+                        )
+
+                        await this.rest
                             .put(
                                 DiscordRestRoutes.applicationGuildCommands(
                                     userId,
@@ -297,36 +336,9 @@ export default class Accomplice extends Client {
                                 if (!retry) {
                                     this.handleCommandRateLimitError(e, guildId)
                                 } else {
-                                    this.logger.error(
-                                        'Failed to register commands for guild again'
-                                    )
+                                    throw e
                                 }
-                                return false
                             })
-                    } else {
-                        for (const guildCollection of await this.guilds.fetch()) {
-                            this.logger.debug(
-                                `Registering commands with guild "${guildCollection[1].name}" (${guildCollection[1].id})`
-                            )
-                            await this.rest
-                                .put(
-                                    DiscordRestRoutes.applicationGuildCommands(
-                                        userId,
-                                        guildCollection[1].id
-                                    ),
-                                    {
-                                        body: commandsJSONArray
-                                    }
-                                )
-                                .catch(e => {
-                                    if (!retry) {
-                                        this.handleCommandRateLimitError(
-                                            e,
-                                            guildCollection[1].id
-                                        )
-                                    } else throw e
-                                })
-                        }
                     }
                 } catch (e) {
                     this.logger.error(

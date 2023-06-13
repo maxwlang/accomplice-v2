@@ -676,7 +676,8 @@ export default class LeaderboardCommand implements Command {
         bot: Accomplice,
         interaction: ChatInputCommandInteraction
     ): Promise<void> {
-        const { Leaderboard, Tracker } = bot.sequelize.models
+        const { Leaderboard, Tracker /*LeaderboardTrackers*/ } =
+            bot.sequelize.models
         const channel = await interaction.options.getChannel('channel')
         if (!channel || channel === null) {
             bot.logger.error('Failed to resolve channel option')
@@ -697,9 +698,12 @@ export default class LeaderboardCommand implements Command {
         }
 
         // find a tracker by uuid passed in
-        const trackerId = await interaction.options.getString('tracker-id')
+        const trackerId = await interaction.options.getString(
+            'tracker-id',
+            true
+        )
         const tracker: Tracker = await Tracker.findOne({
-            where: { channelSnowflake: channel.id }
+            where: { uuid: trackerId }
         })
         if (tracker !== null) {
             bot.logger.debug(

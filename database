@@ -56,3 +56,6 @@ Get top ten reacted users
 
 guildId = SELECT id FROM Guilds WHERE snowflake = '123456789012345'
 top10UserIds = SELECT reacteeUserId FROM Guilds_Reactions WHERE guildId = guildId GROUP BY reacteeUserId LIMIT 10 ORDER BY COUNT(reacteeUserId)
+
+
+handle permissions errors with a dm to the command caller

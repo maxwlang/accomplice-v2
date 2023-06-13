@@ -1,13 +1,20 @@
 {
   "production": {
+    "dialect": "mariadb",
+    "host": "10.0.20.10",
+    "port": "3306",
+    "username": "accomplice",
+    "password": "accomplice",
     "database": "accomplice",
-    "dialect": "sqlite",
-    "storage": "./data/database.db",
     "logging": false
   },
   "development": {
-    "dialect": "sqlite",
-    "storage": "./data/dev-database.db",
+    "dialect": "mariadb",
+    "host": "10.0.20.10",
+    "port": "3306",
+    "username": "accomplice_dev",
+    "password": "accomplice_dev",
+    "database": "accomplice_dev",
     "logging": true
   }
 }

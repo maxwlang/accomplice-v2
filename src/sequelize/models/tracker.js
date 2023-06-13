@@ -20,12 +20,13 @@ module.exports = (sequelize, DataTypes) => {
                 type: DataTypes.INTEGER,
                 allowNull: false
             },
+            reactionType: { type: DataTypes.STRING, allowNull: true },
 
             // At least one of these needs to be provided:
-            reactionType: { type: DataTypes.STRING, allowNull: true },
-            reactionContent: { type: DataTypes.STRING, allowNull: true },
-            reacteeUserId: { type: DataTypes.STRING, allowNull: true },
-            reactorUserId: { type: DataTypes.STRING, allowNull: true }
+            reactionContent: { type: DataTypes.STRING, allowNull: true } // Tracking by content
+            // reacteeUserId: { type: DataTypes.STRING, allowNull: true }, // For tracking by users
+            // reactorUserId: { type: DataTypes.STRING, allowNull: true } // For tracking by users
+            // introduce a trackedContent field instead.
         },
         {
             sequelize,
