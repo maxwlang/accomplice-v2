@@ -8,7 +8,7 @@ export interface Guild {
     snowflake: string
 
     // A json object representing the guild's command state
-    commandsState: string
+    commandsState: [{ [k: string]: unknown }]
 
     // If the guild should be prioritized over other guilds
     isPriority: boolean

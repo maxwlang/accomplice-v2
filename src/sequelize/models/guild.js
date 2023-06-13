@@ -27,7 +27,7 @@ module.exports = (sequelize, DataTypes) => {
             commandsState: {
                 type: DataTypes.JSON,
                 allowNull: false,
-                defaultValue: {}
+                defaultValue: []
             }
         },
         {

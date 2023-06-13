@@ -287,9 +287,14 @@ export default class Accomplice extends Client {
                             )
                         }
 
-                        console.log(guildRow.commandsState)
+                        const commandsNeedUpdate =
+                            JSON.stringify(commandsJSONArray) !==
+                            JSON.stringify(guildRow.commandsState)
 
-                        console.log(JSON.stringify(commandsJSONArray))
+                        if (!commandsNeedUpdate) {
+                            this.logger.debug('Guild commands are up to date')
+                            return
+                        }
 
                         this.logger.debug(
                             `Registering commands with guild "${guild.name}" (${guildId})`
@@ -305,7 +310,16 @@ export default class Accomplice extends Client {
                                     body: commandsJSONArray
                                 }
                             )
-                            .then(() => {
+                            .then(async () => {
+                                await Guild.update(
+                                    { commandsState: commandsJSONArray },
+                                    {
+                                        where: {
+                                            uuid: guildRow.uuid
+                                        }
+                                    }
+                                )
+
                                 if (retry) {
                                     this.timers.delete(
                                         `${guildId}_slash-commands`
@@ -400,10 +414,25 @@ export default class Accomplice extends Client {
         interaction?: ChatInputCommandInteraction
     ): Promise<void> {
         // Used when triggered via chat command, provides progress updates
+        await this.getChannelMessages()
         if (interaction) {
             await interaction.followUp('status here')
         }
         console.log(guild.id, guildRow)
+    }
+
+    private async getChannelMessages(
+        channelSnowflake: string,
+        messageLimit = 500
+    ): Promise<string[] | null> {
+        this.logger.debug(`Grabbing messages from channel ${channelSnowflake}`)
+
+        const channel = await this.channels.fetch(channelSnowflake)
+
+        if (!channel) {
+            this.logger.error('Failed to locate channel')
+            return null
+        }
     }
 
     public async createOrUpdateLeaderboardEmbed(
