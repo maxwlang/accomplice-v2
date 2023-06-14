@@ -367,6 +367,8 @@ export default class Accomplice extends Client {
         guildId?: string,
         interaction?: ChatInputCommandInteraction
     ): Promise<void> {
+        this.logger.debug('Starting guild sync')
+
         let guilds: Collection<string, OAuth2Guild> = new Collection()
 
         if (guildId) {
@@ -385,6 +387,7 @@ export default class Accomplice extends Client {
             guilds = await this.guilds.fetch()
         }
 
+        const syncTasks: Promise<void>[] = [] // Fire off tasks in parallel. May bite us in the future if we get a lot of guilds.
         for (const [guildId, guild] of guilds) {
             const { Guild } = this.sequelize.models
 
@@ -403,8 +406,19 @@ export default class Accomplice extends Client {
                 )
             }
 
-            this.synchronizeChannels(guild, guildRow, interaction)
+            syncTasks.push(
+                this.synchronizeChannels(guild, guildRow, interaction).catch(
+                    e => {
+                        this.logger.error(
+                            `Failed to synchronize channels for guild ${guild.name} (${guild.id}):`
+                        )
+                        console.log(e)
+                    }
+                )
+            )
         }
+
+        await Promise.all(syncTasks)
     }
 
     private async synchronizeChannels(
@@ -413,26 +427,31 @@ export default class Accomplice extends Client {
         guildRow: any, // Stupid sequelize shit
         interaction?: ChatInputCommandInteraction
     ): Promise<void> {
+        const channels = await (await guild.fetch()).channels.fetch()
+        this.logger.debug(
+            `Syncing ${channels.size} channels for guild ${guild.name} (${guild.id} | ${guildRow.uuid})`
+        )
         // Used when triggered via chat command, provides progress updates
-        await this.getChannelMessages()
+        await this.getChannelMessages('asdf')
         if (interaction) {
             await interaction.followUp('status here')
         }
-        console.log(guild.id, guildRow)
+        // console.log(guild.id, guildRow)
     }
 
     private async getChannelMessages(
-        channelSnowflake: string,
-        messageLimit = 500
+        channelSnowflake: string //,
+        // messageLimit = 500
     ): Promise<string[] | null> {
         this.logger.debug(`Grabbing messages from channel ${channelSnowflake}`)
 
-        const channel = await this.channels.fetch(channelSnowflake)
+        // const channel = await this.channels.fetch(channelSnowflake)
 
-        if (!channel) {
-            this.logger.error('Failed to locate channel')
-            return null
-        }
+        // if (!channel) {
+        //     this.logger.error('Failed to locate channel')
+        //     return null
+        // }
+        return ['a', channelSnowflake]
     }
 
     public async createOrUpdateLeaderboardEmbed(
