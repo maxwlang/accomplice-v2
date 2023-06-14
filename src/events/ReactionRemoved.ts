@@ -6,6 +6,7 @@ import { isEmpty } from 'ramda'
 import { User } from '../sequelize/types/user'
 import { getEmojiType } from '../util/emoji'
 import { Reaction } from '../sequelize/types/reaction'
+import { Guild } from '../sequelize/types/guild'
 
 export default class ReactionRemoved implements EventHandle {
     public name = 'Reaction Removed'
@@ -23,7 +24,7 @@ export default class ReactionRemoved implements EventHandle {
         if (!args || isEmpty(args)) return
         const messageReaction = args[0] as MessageReaction
         const reactorUser = args[1] as DiscordUser
-        const { User, Reaction } = bot.sequelize.models
+        const { Guild, User, Reaction, GuildUser } = bot.sequelize.models
 
         if (reactorUser.id === bot.user?.id) return
 
@@ -61,6 +62,19 @@ export default class ReactionRemoved implements EventHandle {
         const reactorIsBot = reactorUser.bot
 
         try {
+            const [guildRow, guildCreated]: [Guild, boolean] =
+                await Guild.findOrCreate({
+                    where: { snowflake: messageReaction.message.guildId },
+                    defaults: {
+                        uuid: uuidv4(),
+                        snowflake: messageReaction.message.guildId,
+                        isPriority: false,
+                        commandsState: []
+                    }
+                })
+
+            if (guildCreated) bot.logger.debug('Created guild')
+
             // find or create reactee user
             const [reactee, reacteeCreated]: [User, boolean] =
                 await User.findOrCreate({
@@ -72,8 +86,14 @@ export default class ReactionRemoved implements EventHandle {
                     }
                 })
 
-            if (reacteeCreated) bot.logger.debug('Created new reactee user')
-
+            if (reacteeCreated) {
+                await GuildUser.create({
+                    uuid: uuidv4(),
+                    guildId: guildRow.uuid,
+                    userId: reactee.uuid
+                })
+                bot.logger.debug('Created new reactee user')
+            }
             // find or create reactor user
             const [reactor, reactorCreated]: [User, boolean] =
                 await User.findOrCreate({
@@ -85,8 +105,14 @@ export default class ReactionRemoved implements EventHandle {
                     }
                 })
 
-            if (reactorCreated) bot.logger.debug('Created new reactor user')
-
+            if (reactorCreated) {
+                await GuildUser.create({
+                    uuid: uuidv4(),
+                    guildId: guildRow.uuid,
+                    userId: reactor.uuid
+                })
+                bot.logger.debug('Created new reactor user')
+            }
             if (
                 !messageReaction.message.guildId ||
                 messageReaction.message.guildId === null

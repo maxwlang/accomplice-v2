@@ -4,6 +4,7 @@ import EventHandle from '../types/EventHandle'
 import { v4 as uuidv4 } from 'uuid'
 import { isEmpty } from 'ramda'
 import { User } from '../sequelize/types/user'
+import { Guild } from '../sequelize/types/guild'
 import { getEmojiType } from '../util/emoji'
 
 export default class ReactionAdded implements EventHandle {
@@ -25,7 +26,7 @@ export default class ReactionAdded implements EventHandle {
 
         if (reactorUser.id === bot.user?.id) return
 
-        const { User, Reaction } = bot.sequelize.models
+        const { User, Reaction, Guild, GuildUser } = bot.sequelize.models
 
         bot.logger.debug('User has reacted')
 
@@ -61,6 +62,19 @@ export default class ReactionAdded implements EventHandle {
         const reactorIsBot = reactorUser.bot
 
         try {
+            const [guildRow, guildCreated]: [Guild, boolean] =
+                await Guild.findOrCreate({
+                    where: { snowflake: messageReaction.message.guildId },
+                    defaults: {
+                        uuid: uuidv4(),
+                        snowflake: messageReaction.message.guildId,
+                        isPriority: false,
+                        commandsState: []
+                    }
+                })
+
+            if (guildCreated) bot.logger.debug('Created guild')
+
             // find or create reactee user
             const [reactee, reacteeCreated]: [User, boolean] =
                 await User.findOrCreate({
@@ -72,7 +86,14 @@ export default class ReactionAdded implements EventHandle {
                     }
                 })
 
-            if (reacteeCreated) bot.logger.debug('Created new reactee user')
+            if (reacteeCreated) {
+                await GuildUser.create({
+                    uuid: uuidv4(),
+                    guildId: guildRow.uuid,
+                    userId: reactee.uuid
+                })
+                bot.logger.debug('Created new reactee user')
+            }
 
             // find or create reactor user
             const [reactor, reactorCreated]: [User, boolean] =
@@ -85,7 +106,14 @@ export default class ReactionAdded implements EventHandle {
                     }
                 })
 
-            if (reactorCreated) bot.logger.debug('Created new reactor user')
+            if (reactorCreated) {
+                await GuildUser.create({
+                    uuid: uuidv4(),
+                    guildId: guildRow.uuid,
+                    userId: reactor.uuid
+                })
+                bot.logger.debug('Created new reactor user')
+            }
 
             if (
                 !messageReaction.message.guildId ||
@@ -107,7 +135,7 @@ export default class ReactionAdded implements EventHandle {
 
             await Reaction.create({
                 uuid: uuidv4(),
-                guildId: messageReaction.message.guildId,
+                guildId: guildRow.uuid,
                 type: emojiType,
                 content: emoji.name,
                 emojiId: emoji.id || null,
