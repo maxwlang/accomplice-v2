@@ -25,8 +25,8 @@ export default class TrackerList implements Embed {
             // TODO: Clean this up, make the embed look better
             return embed.setDescription(
                 `This guild has ${trackers.length} ${
-                    trackers.length === 1 ? 'leaderboard' : 'trackers'
-                }.\n\n${bold('Leaderboard Locations:')}\n${trackers
+                    trackers.length === 1 ? 'tracker' : 'trackers'
+                }.\n\n${bold('Guild Trackers:')}\n${trackers
                     .map(tracker => {
                         return `- ${
                             tracker.name
@@ -40,7 +40,7 @@ export default class TrackerList implements Embed {
                         }\n- - ID: ${inlineCode(
                             tracker.uuid
                         )}\n- - Reaction: ${this.mapReaction(tracker)}
-                        \n- - Leaderboard Size: ${tracker.length}`
+                        \n- - Leaderboard Size: ${tracker.length} Users`
                     })
                     .join('\n\n')}`
             )
