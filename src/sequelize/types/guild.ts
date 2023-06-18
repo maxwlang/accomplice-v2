@@ -1,5 +1,11 @@
 export type uuid = string
 
+export enum GuildSyncState {
+    Unsynced = 'unsynced',
+    Syncing = 'syncing',
+    Synced = 'synced'
+}
+
 export interface Guild {
     // A unique guid for the guild
     uuid: uuid
@@ -12,4 +18,7 @@ export interface Guild {
 
     // If the guild should be prioritized over other guilds
     isPriority: boolean
+
+    // The sync state of guild reactions
+    syncState: GuildSyncState
 }

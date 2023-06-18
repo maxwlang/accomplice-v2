@@ -28,6 +28,11 @@ module.exports = (sequelize, DataTypes) => {
                 type: DataTypes.JSON,
                 allowNull: false,
                 defaultValue: []
+            },
+            syncState: {
+                type: DataTypes.STRING,
+                allowNull: false,
+                defaultValue: 'unsynced'
             }
         },
         {

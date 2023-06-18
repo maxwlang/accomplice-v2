@@ -8,16 +8,19 @@ import {
     Routes as DiscordRestRoutes,
     GuildTextBasedChannel,
     IntentsBitField,
+    Message,
+    NonThreadGuildBasedChannel,
     OAuth2Guild,
     Partials,
     PermissionFlagsBits,
-    RESTPostAPIChatInputApplicationCommandsJSONBody
+    RESTPostAPIChatInputApplicationCommandsJSONBody,
+    TextChannel
 } from 'discord.js'
 import { RedisClientType, createClient } from 'redis'
 import { Logger } from 'winston'
 import EventHandle from './types/EventHandle'
 import { Leaderboard } from './sequelize/types/leaderboard'
-import { Guild } from './sequelize/types/guild'
+import { Guild, GuildSyncState } from './sequelize/types/guild'
 import { token } from './config/discord'
 import { redisPrefix } from './config/redis'
 import { v4 as uuidv4 } from 'uuid'
@@ -49,8 +52,8 @@ export default class Accomplice extends Client {
         this.redis = redisClient
         this.logger = logger
         this.sequelize = sequelize
-        this.commands = new Collection()
-        this.timers = new Collection()
+        this.commands = new Map()
+        this.timers = new Map()
 
         // this.periodicSync = null
         // this.syncing = false
@@ -62,8 +65,8 @@ export default class Accomplice extends Client {
     public logger: Logger
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     public sequelize: any // Stupid sequelize shit
-    public commands: Collection<string, Command>
-    public timers: Collection<string, NodeJS.Timer>
+    public commands: Map<string, Command>
+    public timers: Map<string, NodeJS.Timer>
 
     private async registerEvents(): Promise<void> {
         await readdir('./dist/events')
@@ -363,11 +366,11 @@ export default class Accomplice extends Client {
             })
     }
 
-    public async synchronizeGuilds(
+    public async prepareSynchronizeGuilds(
         guildId?: string,
         interaction?: ChatInputCommandInteraction
     ): Promise<void> {
-        this.logger.debug('Starting guild sync')
+        this.logger.debug('Preparing to start guild sync')
 
         let guilds: Collection<string, OAuth2Guild> = new Collection()
 
@@ -407,7 +410,7 @@ export default class Accomplice extends Client {
             }
 
             syncTasks.push(
-                this.synchronizeChannels(guild, guildRow, interaction).catch(
+                this.synchronizeGuilds(guild, guildRow, interaction).catch(
                     e => {
                         this.logger.error(
                             `Failed to synchronize channels for guild ${guild.name} (${guild.id}):`
@@ -421,37 +424,94 @@ export default class Accomplice extends Client {
         await Promise.all(syncTasks)
     }
 
-    private async synchronizeChannels(
+    private async synchronizeGuilds(
         guild: OAuth2Guild,
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         guildRow: any, // Stupid sequelize shit
         interaction?: ChatInputCommandInteraction
     ): Promise<void> {
-        const channels = await (await guild.fetch()).channels.fetch()
-        this.logger.debug(
-            `Syncing ${channels.size} channels for guild ${guild.name} (${guild.id} | ${guildRow.uuid})`
+        const { Guild } = this.sequelize.models
+
+        await Guild.update(
+            { syncState: GuildSyncState.Syncing },
+            {
+                where: {
+                    uuid: guildRow.uuid
+                }
+            }
         )
-        // Used when triggered via chat command, provides progress updates
-        await this.getChannelMessages('asdf')
-        if (interaction) {
-            await interaction.followUp('status here')
+
+        try {
+            const channelCollection = await (
+                await guild.fetch()
+            ).channels.fetch()
+            this.logger.debug(
+                `Syncing ${channelCollection.size} channels for guild ${guild.name} (${guild.id} | ${guildRow.uuid})`
+            )
+
+            const channels = Array.from(channelCollection.values())
+            const channelTaskChunks = []
+            const taskChunkSize = 3 // How many channels to process at once
+            const messageLimit = 10_000
+
+            while (channels.length > 0) {
+                channelTaskChunks.push(channels.splice(0, taskChunkSize))
+            }
+
+            this.logger.debug(`channelTaskChunks: ${channelTaskChunks.length}`)
+
+            for (const channelTaskChunk of channelTaskChunks) {
+                const channelTask = channelTaskChunk.map(channel => {
+                    if (channel) {
+                        return this.updateReactionsForChannel(
+                            channel,
+                            messageLimit
+                        )
+                    }
+                })
+
+                await Promise.all(channelTask)
+            }
+
+            // Used when triggered via chat command, provides progress updates
+            if (interaction) {
+                await interaction.followUp('status here')
+            }
+        } catch (e) {
+            this.logger.error(
+                `Failed to sync guild ${guild.name} (${guild.id} | ${guildRow.uuid}`
+            )
+            console.log(e)
         }
-        // console.log(guild.id, guildRow)
     }
 
-    private async getChannelMessages(
-        channelSnowflake: string //,
-        // messageLimit = 500
-    ): Promise<string[] | null> {
-        this.logger.debug(`Grabbing messages from channel ${channelSnowflake}`)
+    private async updateReactionsForChannel(
+        channel: NonThreadGuildBasedChannel,
+        messageLimit
+    ): Promise<void> {
+        if (channel.type === ChannelType.GuildText) {
+            this.logger.debug(`Grabbing messages from channel ${channel.id}`)
+            const messages: Collection<string, Message<true>> = new Collection()
 
-        // const channel = await this.channels.fetch(channelSnowflake)
-
-        // if (!channel) {
-        //     this.logger.error('Failed to locate channel')
-        //     return null
+            const fetchedMessages = await channel.messages.fetch({
+                limit: 100,
+                before
+            })
+        }
+        // while (true) {
+        // if (messages.length >= limit) break
+        // const options = { limit: 100 }
+        // if (lastId) options.before = lastId
+        // const fetchedMessages = await channel.messages.fetch(options)
+        // if (fetchedMessages !== undefined) {
+        //     messages.push(...fetchedMessages)
+        //     lastId = fetchedMessages.last().id
+        //     bot.log.info(
+        //         `[Sync] ${messages.length} (recv) of ${limit} (req) for ${channel.name}`
+        //     )
+        //     if (fetchedMessages.size !== 100) break
         // }
-        return ['a', channelSnowflake]
+        // }
     }
 
     public async createOrUpdateLeaderboardEmbed(
@@ -576,7 +636,7 @@ export default class Accomplice extends Client {
         await this.registerEvents() // Configure event listeners
         await this.login(token)
 
-        await this.synchronizeGuilds() // Get up to date with messages in guilds
+        await this.prepareSynchronizeGuilds() // Get up to date with messages in guilds
         this.registerCommandHandler() // Configure command event listeners
         await this.registerCommands() // Register commands w/ guilds
         // this.registerLeaderboards() // Get messages from snowflake ids in db, edit every 2.5 min?
