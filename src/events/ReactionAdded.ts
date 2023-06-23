@@ -139,6 +139,7 @@ export default class ReactionAdded implements EventHandle {
                 type: emojiType,
                 content: emoji.name,
                 emojiId: emoji.id || null,
+                messageSnowflake: messageReaction.message.id,
                 reacteeUserId: reactee.uuid,
                 reactorUserId: reactor.uuid
             })
