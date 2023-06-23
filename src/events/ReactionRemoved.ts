@@ -133,7 +133,7 @@ export default class ReactionRemoved implements EventHandle {
 
             const reaction: Reaction = await Reaction.findOne({
                 where: {
-                    guildId: messageReaction.message.guildId,
+                    guildId: guildRow.uuid,
                     type: emojiType,
                     content: emoji.name,
                     emojiId: emoji.id || null,
