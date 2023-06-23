@@ -8,13 +8,11 @@ import {
     Routes as DiscordRestRoutes,
     GuildTextBasedChannel,
     IntentsBitField,
-    Message,
     NonThreadGuildBasedChannel,
     OAuth2Guild,
     Partials,
     PermissionFlagsBits,
-    RESTPostAPIChatInputApplicationCommandsJSONBody,
-    TextChannel
+    RESTPostAPIChatInputApplicationCommandsJSONBody
 } from 'discord.js'
 import { RedisClientType, createClient } from 'redis'
 import { Logger } from 'winston'
@@ -28,6 +26,9 @@ import Command from './types/Command'
 import LeaderboardEmbed from './embeds/Leaderboard'
 import ApplicationCommandRateLimit from './embeds/ApplicationCommandRateLimit'
 import CommandsRegistered from './embeds/CommandsRegistered'
+import { User } from './sequelize/types/user'
+import { getEmojiType } from './util/emoji'
+import { isNil } from 'ramda'
 
 export default class Accomplice extends Client {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -149,10 +150,11 @@ export default class Accomplice extends Client {
     }
 
     private async handleCommandRateLimitError(
-        e: { code: number },
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        e: any,
         guildId: string
     ): Promise<void> {
-        if (e.code === 30034) {
+        if (!isNil(e?.code) && e.code === 30034) {
             if (this.timers.get(`${guildId}_slash-commands`) !== undefined) {
                 this.timers.delete(`${guildId}_slash-commands`)
             }
@@ -222,148 +224,168 @@ export default class Accomplice extends Client {
         guildId?: string,
         retry?: boolean
     ): Promise<boolean | void> {
-        await readdir('./dist/commands')
-            .then((files: string[]) =>
-                files.filter(file => file.endsWith('.js'))
-            )
-            // Load in commands
-            .then(async (commandFiles: string[]) => {
-                const commandsJSONArray: RESTPostAPIChatInputApplicationCommandsJSONBody[] =
-                    []
+        return (
+            readdir('./dist/commands')
+                .then((files: string[]) =>
+                    files.filter(file => file.endsWith('.js'))
+                )
+                // Load in commands
+                .then(async (commandFiles: string[]) => {
+                    const commandsJSONArray: RESTPostAPIChatInputApplicationCommandsJSONBody[] =
+                        []
 
-                try {
-                    for (const commandFile of commandFiles) {
-                        try {
-                            const Command = (
-                                await import(`./commands/${commandFile}`)
-                            ).default
-                            const command: Command = new Command()
-                            this.commands.set(command.meta.name, command)
-                            commandsJSONArray.push(command.meta.toJSON())
-                            this.logger.debug(
-                                `[Load Command] Name: "${command.meta.name}" ; Description: "${command.meta.description}"`
-                            )
-                        } catch (e) {
-                            this.logger.error(
-                                `Failed to load command "${commandFile}" with error: ${e}`
-                            )
-                        }
-                    }
-
-                    let userId = this.user?.id
-                    while (!userId) {
-                        userId = (await this.user?.fetch())?.id
-                    }
-
-                    let guildCollection: Collection<string, OAuth2Guild> =
-                        await this.guilds.fetch()
-
-                    // When updating a specific guild
-                    if (guildId) {
-                        const guild = guildCollection.get(guildId)
-                        if (!guild) {
-                            throw new Error('Could not locate guild')
-                        }
-
-                        guildCollection = new Collection<
-                            string,
-                            OAuth2Guild
-                        >().set(guildId, guild)
-                    }
-
-                    const { Guild } = this.sequelize.models
-
-                    for (const [guildId, guild] of guildCollection) {
-                        this.logger.debug(
-                            `Checking guild commands state for guild "${guild.name}" (${guildId})`
-                        )
-
-                        const guildRow: Guild = await Guild.findOne({
-                            where: {
-                                snowflake: guildId
-                            }
-                        })
-
-                        if (!guildRow) {
-                            throw new Error(
-                                'Could not locate guild during command update'
-                            )
-                        }
-
-                        const commandsNeedUpdate =
-                            JSON.stringify(commandsJSONArray) !==
-                            JSON.stringify(guildRow.commandsState)
-
-                        if (!commandsNeedUpdate) {
-                            this.logger.debug('Guild commands are up to date')
-                            return
-                        }
-
-                        this.logger.debug(
-                            `Registering commands with guild "${guild.name}" (${guildId})`
-                        )
-
-                        await this.rest
-                            .put(
-                                DiscordRestRoutes.applicationGuildCommands(
-                                    userId,
-                                    guildId
-                                ),
-                                {
-                                    body: commandsJSONArray
-                                }
-                            )
-                            .then(async () => {
-                                await Guild.update(
-                                    { commandsState: commandsJSONArray },
-                                    {
-                                        where: {
-                                            uuid: guildRow.uuid
-                                        }
-                                    }
+                    try {
+                        for (const commandFile of commandFiles) {
+                            try {
+                                const Command = (
+                                    await import(`./commands/${commandFile}`)
+                                ).default
+                                const command: Command = new Command()
+                                this.commands.set(command.meta.name, command)
+                                commandsJSONArray.push(command.meta.toJSON())
+                                this.logger.debug(
+                                    `[Load Command] Name: "${command.meta.name}" ; Description: "${command.meta.description}"`
                                 )
+                            } catch (e) {
+                                this.logger.error(
+                                    `Failed to load command "${commandFile}" with error: ${e}`
+                                )
+                            }
+                        }
 
-                                if (retry) {
-                                    this.timers.delete(
-                                        `${guildId}_slash-commands`
-                                    )
+                        let userId = this.user?.id
+                        while (!userId) {
+                            userId = (await this.user?.fetch())?.id
+                        }
 
-                                    const channel =
-                                        this.findPublicChannel(guildId)
+                        let guildCollection: Collection<string, OAuth2Guild> =
+                            await this.guilds.fetch()
 
-                                    if (channel) {
-                                        const commandsRegisteredEmbed =
-                                            new CommandsRegistered().getEmbed()
-                                        channel
-                                            .send({
-                                                embeds: [
-                                                    commandsRegisteredEmbed
-                                                ]
-                                            })
-                                            .catch(e =>
-                                                this.logger.error(
-                                                    `Failed to send commands registered notification: ${e}`
-                                                )
-                                            )
-                                    }
+                        // When updating a specific guild
+                        if (guildId) {
+                            const guild = guildCollection.get(guildId)
+                            if (!guild) {
+                                throw new Error('Could not locate guild')
+                            }
+
+                            guildCollection = new Collection<
+                                string,
+                                OAuth2Guild
+                            >().set(guildId, guild)
+                        }
+
+                        const { Guild } = this.sequelize.models
+
+                        for (const [guildId, guild] of guildCollection) {
+                            this.logger.debug(
+                                `Checking guild commands state for guild "${guild.name}" (${guildId})`
+                            )
+
+                            const guildRow: Guild = await Guild.findOne({
+                                where: {
+                                    snowflake: guildId
                                 }
-                                return true
                             })
-                            .catch(e => {
+
+                            if (!guildRow) {
+                                throw new Error(
+                                    'Could not locate guild during command update'
+                                )
+                            }
+
+                            const commandsNeedUpdate =
+                                JSON.stringify(commandsJSONArray) !==
+                                JSON.stringify(guildRow.commandsState)
+
+                            if (!commandsNeedUpdate) {
+                                this.logger.debug(
+                                    'Guild commands are up to date'
+                                )
+                                return
+                            }
+
+                            this.logger.debug(
+                                `Registering commands with guild "${guild.name}" (${guildId})`
+                            )
+
+                            let success = false
+                            try {
+                                await this.rest
+                                    .put(
+                                        DiscordRestRoutes.applicationGuildCommands(
+                                            userId,
+                                            guildId
+                                        ),
+                                        {
+                                            body: commandsJSONArray
+                                        }
+                                    )
+                                    .then(
+                                        async () => {
+                                            await Guild.update(
+                                                {
+                                                    commandsState:
+                                                        commandsJSONArray
+                                                },
+                                                {
+                                                    where: {
+                                                        uuid: guildRow.uuid
+                                                    }
+                                                }
+                                            )
+
+                                            if (retry) {
+                                                this.timers.delete(
+                                                    `${guildId}_slash-commands`
+                                                )
+
+                                                const channel =
+                                                    this.findPublicChannel(
+                                                        guildId
+                                                    )
+
+                                                if (channel) {
+                                                    const commandsRegisteredEmbed =
+                                                        new CommandsRegistered().getEmbed()
+                                                    channel
+                                                        .send({
+                                                            embeds: [
+                                                                commandsRegisteredEmbed
+                                                            ]
+                                                        })
+                                                        .catch(e =>
+                                                            this.logger.error(
+                                                                `Failed to send commands registered notification: ${e}`
+                                                            )
+                                                        )
+                                                }
+                                            }
+                                            success = true
+                                        },
+                                        reason => {
+                                            this.logger.error(
+                                                'Failed to register commands:'
+                                            )
+                                            console.log(reason)
+                                        }
+                                    )
+                            } catch (e) {
                                 if (!retry) {
                                     this.handleCommandRateLimitError(e, guildId)
                                 } else {
                                     throw e
                                 }
-                            })
+                            }
+
+                            if (guildId) return success
+                        }
+                    } catch (e) {
+                        this.logger.error(
+                            `Failed to load commands with error: ${e}`
+                        )
                     }
-                } catch (e) {
-                    this.logger.error(
-                        `Failed to load commands with error: ${e}`
-                    )
-                }
-                return commandFiles
-            })
+                })
+        )
     }
 
     public async prepareSynchronizeGuilds(
@@ -390,18 +412,19 @@ export default class Accomplice extends Client {
             guilds = await this.guilds.fetch()
         }
 
-        const syncTasks: Promise<void>[] = [] // Fire off tasks in parallel. May bite us in the future if we get a lot of guilds.
+        const syncTasks: Promise<void>[] = [] // Fire off tasks in parallel. May bite us in the future if lots of guilds add us at once
         for (const [guildId, guild] of guilds) {
             const { Guild } = this.sequelize.models
 
-            const [guildRow, created] = await Guild.findOrCreate({
-                where: { snowflake: guildId },
-                defaults: {
-                    uuid: uuidv4(),
-                    snowflake: guildId,
-                    isPriority: false
-                }
-            })
+            const [guildRow, created]: [Guild, boolean] =
+                await Guild.findOrCreate({
+                    where: { snowflake: guildId },
+                    defaults: {
+                        uuid: uuidv4(),
+                        snowflake: guildId,
+                        isPriority: false
+                    }
+                })
 
             if (created) {
                 this.logger.info(
@@ -426,11 +449,17 @@ export default class Accomplice extends Client {
 
     private async synchronizeGuilds(
         guild: OAuth2Guild,
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        guildRow: any, // Stupid sequelize shit
+        guildRow: Guild,
         interaction?: ChatInputCommandInteraction
     ): Promise<void> {
         const { Guild } = this.sequelize.models
+
+        if (
+            guildRow.syncState === GuildSyncState.Syncing ||
+            guildRow.syncState === GuildSyncState.Synced
+        ) {
+            return
+        }
 
         await Guild.update(
             { syncState: GuildSyncState.Syncing },
@@ -445,14 +474,15 @@ export default class Accomplice extends Client {
             const channelCollection = await (
                 await guild.fetch()
             ).channels.fetch()
-            this.logger.debug(
-                `Syncing ${channelCollection.size} channels for guild ${guild.name} (${guild.id} | ${guildRow.uuid})`
+            this.logger.info(
+                `Syncing ${channelCollection.size} channel(s) for guild "${guild.name}" (${guild.id} | ${guildRow.uuid})`
             )
 
             const channels = Array.from(channelCollection.values())
             const channelTaskChunks = []
             const taskChunkSize = 3 // How many channels to process at once
-            const messageLimit = 10_000
+            let chunkProgress = 0 // How many chunks have been processed
+            const messageLimit = 10_000 // How far back we will go in each channel
 
             while (channels.length > 0) {
                 channelTaskChunks.push(channels.splice(0, taskChunkSize))
@@ -471,15 +501,38 @@ export default class Accomplice extends Client {
                 })
 
                 await Promise.all(channelTask)
+                chunkProgress++
+
+                if (interaction) {
+                    interaction.followUp(
+                        `progress update: ${chunkProgress} chunks complete of ${channelTaskChunks.length}` // TODO: Embed
+                    )
+                }
             }
 
-            // Used when triggered via chat command, provides progress updates
+            await Guild.update(
+                { syncState: GuildSyncState.Synced },
+                {
+                    where: {
+                        uuid: guildRow.uuid
+                    }
+                }
+            )
+
             if (interaction) {
-                await interaction.followUp('status here')
+                await interaction.followUp('finished') // TODO: Embed
             }
         } catch (e) {
+            await Guild.update(
+                { syncState: GuildSyncState.Errored },
+                {
+                    where: {
+                        uuid: guildRow.uuid
+                    }
+                }
+            )
             this.logger.error(
-                `Failed to sync guild ${guild.name} (${guild.id} | ${guildRow.uuid}`
+                `Failed to sync guild "${guild.name}" (${guild.id} | ${guildRow.uuid}`
             )
             console.log(e)
         }
@@ -487,31 +540,147 @@ export default class Accomplice extends Client {
 
     private async updateReactionsForChannel(
         channel: NonThreadGuildBasedChannel,
-        messageLimit
+        messageLimit: number
     ): Promise<void> {
-        if (channel.type === ChannelType.GuildText) {
-            this.logger.debug(`Grabbing messages from channel ${channel.id}`)
-            const messages: Collection<string, Message<true>> = new Collection()
+        if (channel.type === ChannelType.GuildText && channel.lastMessageId) {
+            this.logger.debug(
+                `Grabbing messages from channel "${channel.guild.name}:${channel.name}" (${channel.guildId}:${channel.id})`
+            )
 
-            const fetchedMessages = await channel.messages.fetch({
-                limit: 100,
-                before
-            })
+            const { Guild, Reaction, User, GuildUser } = this.sequelize.models
+
+            try {
+                let messagesIndexed = 0
+                let messageCheckpoint: string = channel.lastMessageId
+                while (messagesIndexed < messageLimit) {
+                    this.logger.debug(`message index size: ${messagesIndexed}`)
+                    const fetchedMessages = await channel.messages.fetch({
+                        limit: 100,
+                        before: messageCheckpoint
+                    })
+
+                    const lastMessage = fetchedMessages.last()
+                    if (!lastMessage) break
+                    if (messageCheckpoint === lastMessage.id) break // Done with channel
+
+                    const guildRow: Guild = await Guild.findOne({
+                        where: {
+                            snowflake: channel.guildId
+                        }
+                    })
+
+                    if (!guildRow) {
+                        throw new Error(
+                            'Could not locate guild during reaction tally for channel'
+                        )
+                    }
+
+                    // For each message
+                    fetchedMessages.forEach(
+                        async (message, messageSnowflake) => {
+                            if (message.reactions.cache.size === 0) return // Only care about messages with reacts
+
+                            // find or create reactee user
+                            const [reactee, reacteeCreated]: [User, boolean] =
+                                await User.findOrCreate({
+                                    where: { snowflake: message.author.id },
+                                    defaults: {
+                                        uuid: uuidv4(),
+                                        snowflake: message.author.id,
+                                        isBot: message.author.bot
+                                    }
+                                })
+
+                            if (reacteeCreated) {
+                                await GuildUser.create({
+                                    uuid: uuidv4(),
+                                    guildId: guildRow.uuid,
+                                    userId: reactee.uuid
+                                })
+                                this.logger.debug('Created new reactee user')
+                            }
+
+                            // For each unique? reaction on message
+                            message.reactions.cache.forEach(
+                                async messageReaction => {
+                                    // For each user that reacted
+                                    const users =
+                                        await messageReaction.users.fetch()
+
+                                    users.forEach(async user => {
+                                        // find or create reactor user
+                                        const [reactor, reactorCreated]: [
+                                            User,
+                                            boolean
+                                        ] = await User.findOrCreate({
+                                            where: { snowflake: user.id },
+                                            defaults: {
+                                                uuid: uuidv4(),
+                                                snowflake: user.id,
+                                                isBot: user.bot
+                                            }
+                                        })
+
+                                        if (reactorCreated) {
+                                            await GuildUser.create({
+                                                uuid: uuidv4(),
+                                                guildId: guildRow.uuid,
+                                                userId: reactor.uuid
+                                            })
+                                            this.logger.debug(
+                                                'Created new reactor user'
+                                            )
+                                        }
+
+                                        const emoji = messageReaction.emoji
+                                        const emojiType = getEmojiType(emoji)
+
+                                        if (!emojiType) {
+                                            this.logger.error(
+                                                'Failed to determine emoji type'
+                                            )
+                                            return
+                                        }
+
+                                        await Reaction.findOrCreate({
+                                            where: {
+                                                guildId: guildRow.uuid,
+                                                type: emojiType,
+                                                content: emoji.name,
+                                                emojiId: emoji.id || null,
+                                                messageSnowflake,
+                                                reacteeUserId: reactee.uuid,
+                                                reactorUserId: reactor.uuid
+                                            },
+                                            defaults: {
+                                                uuid: uuidv4(),
+                                                guildId: guildRow.uuid,
+                                                type: emojiType,
+                                                content: emoji.name,
+                                                emojiId: emoji.id || null,
+                                                messageSnowflake,
+                                                reacteeUserId: reactee.uuid,
+                                                reactorUserId: reactor.uuid
+                                            }
+                                        })
+                                    })
+                                }
+                            )
+                        }
+                    )
+
+                    // store reaction data
+
+                    messagesIndexed = messagesIndexed + fetchedMessages.size
+                    messageCheckpoint = lastMessage.id
+                }
+            } catch (e) {
+                this.logger.error(
+                    `Failed grabbing messages from channel "${channel.guild.name}:${channel.name}" (${channel.guildId}:${channel.id})`
+                )
+                console.log(e)
+            }
         }
-        // while (true) {
-        // if (messages.length >= limit) break
-        // const options = { limit: 100 }
-        // if (lastId) options.before = lastId
-        // const fetchedMessages = await channel.messages.fetch(options)
-        // if (fetchedMessages !== undefined) {
-        //     messages.push(...fetchedMessages)
-        //     lastId = fetchedMessages.last().id
-        //     bot.log.info(
-        //         `[Sync] ${messages.length} (recv) of ${limit} (req) for ${channel.name}`
-        //     )
-        //     if (fetchedMessages.size !== 100) break
-        // }
-        // }
     }
 
     public async createOrUpdateLeaderboardEmbed(

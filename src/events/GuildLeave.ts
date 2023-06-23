@@ -24,7 +24,7 @@ export default class GuildLeave implements EventHandle {
             Starboard,
             Leaderboard,
             Reaction,
-            GuildUsers,
+            GuildUser,
             LeaderboardTrackers,
             Tracker
         } = bot.sequelize.models
@@ -40,7 +40,7 @@ export default class GuildLeave implements EventHandle {
         }
 
         // Stop and remove any guild timers
-        bot.timers.findKey((timer, key) => {
+        bot.timers.forEach((timer, key) => {
             if (key.startsWith(`${guild.id}_`)) {
                 clearInterval(timer)
                 bot.timers.delete(key)
@@ -69,7 +69,7 @@ export default class GuildLeave implements EventHandle {
                     guildId: guildRow.uuid
                 }
             }),
-            GuildUsers.destroy({
+            GuildUser.destroy({
                 where: {
                     guildId: guildRow.uuid
                 }
