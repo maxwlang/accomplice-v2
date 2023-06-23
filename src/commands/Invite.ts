@@ -28,7 +28,6 @@ export default class PingCommand implements Command {
                 PermissionFlagsBits.ReadMessageHistory,
                 PermissionFlagsBits.UseApplicationCommands,
                 PermissionFlagsBits.UseExternalEmojis,
-                // PermissionFlagsBits.UseExternalSounds, // What??
                 PermissionFlagsBits.ViewChannel
             ],
             scopes: [OAuth2Scopes.Bot]
