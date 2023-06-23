@@ -3,7 +3,8 @@ export type uuid = string
 export enum GuildSyncState {
     Unsynced = 'unsynced',
     Syncing = 'syncing',
-    Synced = 'synced'
+    Synced = 'synced',
+    Errored = 'errored'
 }
 
 export interface Guild {
