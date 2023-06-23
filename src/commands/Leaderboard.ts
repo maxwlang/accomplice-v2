@@ -576,6 +576,6 @@ export default class LeaderboardCommand implements Command {
             'You have started a leaderboard synchronization. During this time, leaderboards for this guild will be unavailable'
         )
 
-        bot.synchronizeGuilds(interaction.guildId, interaction)
+        bot.prepareSynchronizeGuilds(interaction.guildId, interaction)
     }
 }

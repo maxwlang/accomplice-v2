@@ -34,6 +34,7 @@ export default class GuildJoin implements EventHandle {
         })
 
         // Reaction Indexing
+        bot.prepareSynchronizeGuilds(guild.id)
 
         // Welcome message
         let welcomeMessage: Message<true> | undefined
