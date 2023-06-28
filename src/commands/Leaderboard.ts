@@ -221,7 +221,7 @@ export default class LeaderboardCommand implements Command {
                 }
             })
 
-        if (leaderboard !== null && leaderboard !== undefined && !created) {
+        if (leaderboard && !created) {
             await interaction.reply(
                 `A leaderboard already exists in ${channelMention(
                     channel.id

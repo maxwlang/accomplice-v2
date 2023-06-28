@@ -21,7 +21,7 @@ export default class Welcome implements Embed {
             .setFooter({ text: `Thank you for using ${avatarDisplayName}!` })
             .setTimestamp()
 
-        if (avatarUrl && avatarUrl !== null) {
+        if (avatarUrl) {
             embed = embed.setThumbnail(avatarUrl)
         }
 

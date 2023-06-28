@@ -400,7 +400,7 @@ export default class Accomplice extends Client {
             const fetchedGuilds = await this.guilds.fetch()
             const guild = fetchedGuilds.get(guildId)
 
-            if (!guild || guild === null) {
+            if (!guild) {
                 this.logger.error(
                     `DiscordJS couldn't resolve guild "${guildId}"`
                 )
@@ -687,107 +687,71 @@ export default class Accomplice extends Client {
         leaderboardId: string,
         deleteEmbed?: true
     ): Promise<void> {
-        const { Guild, Leaderboard } = this.sequelize.models
+        const { Leaderboard } = this.sequelize.models
+        this.logger.debug(`Create or update leaderboard ${leaderboardId}`)
 
         // Get leaderboard
         const leaderboard: Leaderboard | null = await Leaderboard.findOne({
             where: { uuid: leaderboardId }
         })
 
-        if (leaderboard === null || !leaderboard) {
-            this.logger.error('Failed to locate leaderboard in database')
+        if (!leaderboard) {
+            this.logger.error(
+                `Failed to locate leaderboard in database ${leaderboardId}`
+            )
             return
         }
 
-        // Get leaderboard guild
-        const guild: Guild | null = await Guild.findOne({
-            where: { uuid: leaderboard.guildId }
-        })
+        // Get leaderboard channel
+        const leaderboardChannel = await this.channels.fetch(
+            leaderboard.channelSnowflake
+        )
 
-        if (guild === null || !guild) {
-            this.logger.error('Failed to locate guild in database')
+        if (!leaderboardChannel || !leaderboardChannel.isTextBased()) {
+            this.logger.error(
+                `Leaderboard channel does not exist or is of invalid type ${leaderboardId}:${leaderboard.channelSnowflake}`
+            )
             return
         }
+
+        await leaderboardChannel.fetch()
 
         const messageId = leaderboard.messageSnowflake
-        const guildsCollection = await this.guilds.fetch()
-        const leaderboardGuild = guildsCollection.get(guild.snowflake)
-
-        if (!leaderboardGuild || leaderboardGuild === null) {
-            this.logger.error('Failed to locate leaderboard guild')
-            return
-        }
-
-        // Get channels from guild
-        const guildChannels = await (
-            await leaderboardGuild.fetch()
-        ).channels.fetch()
-
-        // Find leaderboard channel
-        let leaderboardChannel = guildChannels.get(leaderboard.channelSnowflake)
-
-        if (!leaderboardChannel || leaderboardChannel === null) {
-            this.logger.error('Failed to locate leaderboard channel')
-            return
-        }
-
-        leaderboardChannel = await leaderboardChannel.fetch()
-
-        if (leaderboardChannel.type !== ChannelType.GuildText) {
-            this.logger.error('Leaderboard channel is of an invalid type')
-            return
-        }
-
-        if (!messageId || messageId === null || !deleteEmbed) {
-            // Leaderboard message id doesn't exist in DB, create new leaderboard message
-            const leaderboardEmbed = new LeaderboardEmbed()
-            const message = await leaderboardChannel.send({
-                embeds: [leaderboardEmbed.getEmbed({ leaderboard })]
+        if (messageId) {
+            console.log(leaderboardChannel.id)
+            const messages = await leaderboardChannel.messages.fetch({
+                around: messageId,
+                limit: 1
             })
+            const message = messages.get(messageId)
 
-            await Leaderboard.update(
-                { messageSnowflake: message.id },
-                {
-                    where: {
-                        uuid: leaderboard.uuid
-                    }
+            if (message) {
+                if (deleteEmbed) {
+                    this.logger.debug('Delete leaderboard embed')
+                    await message.delete()
+                } else {
+                    this.logger.debug('Update leaderboard embed')
+                    await message.edit('hello world')
                 }
-            )
-        } else {
-            // Leaderboard message id exists, obtain a state of that message
-            const messages = await leaderboardChannel.messages.fetch()
-            const leaderboardMessage = messages.get(messageId)
-
-            if (!leaderboardMessage || leaderboardMessage === null) {
-                this.logger.error('Leaderboard message does not exist')
                 return
             }
-
-            if (deleteEmbed) {
-                await leaderboardMessage.delete()
-            } else {
-                await leaderboardMessage.edit('hello world')
-            }
         }
+
+        this.logger.debug('creating leaderboard embed')
+        const leaderboardEmbed = new LeaderboardEmbed()
+        const sentMessage = await leaderboardChannel.send({
+            embeds: [leaderboardEmbed.getEmbed({ leaderboard })]
+        })
+
+        await Leaderboard.update(
+            { messageSnowflake: sentMessage.id },
+            {
+                where: {
+                    uuid: leaderboard.uuid
+                }
+            }
+        )
     }
-
-    // public async createOrUpdateLeaderboardEmbeds(
-    //     guildId: string
-    // ): Promise<void> {
-    //     console.log('update leaderboards', guildId)
-    //     // for each leaderboard in guild
-    //     //  // this.createOrUpdateLeaderboardEmbed(leaderboard.id)
-    // }
-
-    //
-    // private async checkGuildSyncStates(): Promise<void> {
-    //     // for each guild of guilds
-    //     //    // for each channel of guild
-    //     //        // if channel.getLatestMessage().snowflake !== db.channels.findBySnowflake(channel.snowflake).latestMessageSnowflake
-    //     //          // // channel sync is behind, update channel content
-    //     //          // for each message of channel since latestMessageSnowflake
-    //     //              // db.reacts.store(message.reacts)
-    // }
 
     public async start(): Promise<Accomplice> {
         // Setup redis, perform quick write check
@@ -808,7 +772,6 @@ export default class Accomplice extends Client {
         await this.prepareSynchronizeGuilds() // Get up to date with messages in guilds
         this.registerCommandHandler() // Configure command event listeners
         await this.registerCommands() // Register commands w/ guilds
-        // this.registerLeaderboards() // Get messages from snowflake ids in db, edit every 2.5 min?
 
         return this
     }
