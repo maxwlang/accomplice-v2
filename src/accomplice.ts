@@ -727,10 +727,10 @@ export default class Accomplice extends Client {
 
             if (message) {
                 if (deleteEmbed) {
-                    this.logger.debug('Delete leaderboard embed')
+                    this.logger.debug('Leaderboard embed deleted')
                     await message.delete()
                 } else {
-                    this.logger.debug('Update leaderboard embed')
+                    this.logger.debug('Leaderboard embed updated')
                     await message.edit('hello world')
                 }
                 return
