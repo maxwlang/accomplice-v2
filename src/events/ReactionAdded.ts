@@ -5,6 +5,7 @@ import { v4 as uuidv4 } from 'uuid'
 import { isEmpty } from 'ramda'
 import { User } from '../sequelize/types/user'
 import { Guild } from '../sequelize/types/guild'
+import { Reaction } from '../sequelize/types/reaction'
 import { getEmojiType } from '../util/emoji'
 
 export default class ReactionAdded implements EventHandle {
@@ -60,6 +61,7 @@ export default class ReactionAdded implements EventHandle {
         const reacteeIsBot = messageReaction.message.author.bot
         const reactorSnowflake = reactorUser.id
         const reactorIsBot = reactorUser.bot
+        let reaction: Reaction | undefined
 
         try {
             const [guildRow, guildCreated]: [Guild, boolean] =
@@ -133,7 +135,7 @@ export default class ReactionAdded implements EventHandle {
                 return
             }
 
-            await Reaction.create({
+            reaction = await Reaction.create({
                 uuid: uuidv4(),
                 guildId: guildRow.uuid,
                 type: emojiType,
@@ -148,7 +150,14 @@ export default class ReactionAdded implements EventHandle {
             return
         }
 
-        // update leaderboard
-        // bot.updateleaderboardembed(messageReaction.message.guildId)
+        if (!reaction) return
+
+        try {
+            // from reaction
+            // for each tracker
+            bot.createOrUpdateLeaderboardEmbed()
+        } catch (e) {
+            bot.logger.error(`Failed to update leaderboard(s): ${e}`)
+        }
     }
 }
