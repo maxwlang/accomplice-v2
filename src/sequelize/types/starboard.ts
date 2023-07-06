@@ -1,11 +1,9 @@
-export type uuid = string
-
 export interface Starboard {
     // A unique guid for the starboard
-    uuid: uuid
+    uuid: string
 
     // The guilds unique id, links with uuid on Guilds table
-    guildId: uuid
+    guildId: string
 
     // An optional name for the starboard set by the user
     name: string | null

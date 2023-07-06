@@ -1,5 +1,3 @@
-export type uuid = string
-
 export enum ReactionType {
     Emoji = 'emoji',
     Custom = 'custom',
@@ -10,10 +8,10 @@ export enum ReactionType {
 
 export interface Reaction {
     // A unique guid for the reaction event
-    uuid: uuid
+    uuid: string
 
     // The uuid for the guild, links with uuid on the Guild table
-    guildId: uuid
+    guildId: string
 
     // The type of reaction
     type: ReactionType
@@ -28,8 +26,8 @@ export interface Reaction {
     messageSnowflake: string
 
     // The user who has received the reaction
-    reacteeUserId: uuid
+    reacteeUserId: string
 
     // The user who has reacted
-    reactorUserId: uuid
+    reactorUserId: string
 }

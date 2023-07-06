@@ -1,5 +1,3 @@
-export type uuid = string
-
 export enum GuildSyncState {
     Unsynced = 'unsynced',
     Syncing = 'syncing',
@@ -9,7 +7,7 @@ export enum GuildSyncState {
 
 export interface Guild {
     // A unique guid for the guild
-    uuid: uuid
+    uuid: string
 
     // The guild's snowflake
     snowflake: string

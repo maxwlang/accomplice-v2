@@ -1,12 +1,10 @@
-export type uuid = string
-
 export interface GuildUser {
     // A unique guid for the Guild User
-    uuid: uuid
+    uuid: string
 
     // The guild this user lives
-    guildId: uuid
+    guildId: string
 
     // The user
-    userId: uuid
+    userId: string
 }

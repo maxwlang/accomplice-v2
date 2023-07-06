@@ -1,11 +1,9 @@
-export type uuid = string
-
 export interface Leaderboard {
     // A unique guid for the leaderboard
-    uuid: uuid
+    uuid: string
 
     // The uuid for the guild, links with uuid on the Guild table
-    guildId: uuid
+    guildId: string
 
     // The snowflake of the leaderboard embed message
     messageSnowflake: string | null

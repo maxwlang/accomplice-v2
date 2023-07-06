@@ -1,13 +1,11 @@
 import { ReactionType } from './reaction'
 
-export type uuid = string
-
 export interface Tracker {
     // The unique guid of the tracker
     uuid: string
 
     // The uuid for the guild, links with uuid on the Guild table
-    guildId: uuid
+    guildId: string
 
     // The tracker display name
     name: string | null
@@ -22,9 +20,10 @@ export interface Tracker {
     // For tracking by: The content in the reaction, ex: snowflake or 😊
     reactionContent: string | null
 
+    // TODO:
     // For tracking by: The user who received the reaction
-    reacteeUserId: string | null
+    // reacteeUserId: string | null
 
     // For tracking by: The user who reacted to the message
-    reactorUserId: string | null
+    // reactorUserId: string | null
 }
