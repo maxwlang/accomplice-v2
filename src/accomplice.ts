@@ -29,6 +29,11 @@ import CommandsRegistered from './embeds/CommandsRegistered'
 import { User } from './sequelize/types/user'
 import { getEmojiType } from './util/emoji'
 import { isNil } from 'ramda'
+import { Tracker } from './sequelize/types/tracker'
+import { Reaction } from './sequelize/types/reaction'
+
+import { Op } from 'sequelize'
+import { LeaderboardTrackers } from './sequelize/types/leaderboard_trackers'
 
 export default class Accomplice extends Client {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -55,10 +60,6 @@ export default class Accomplice extends Client {
         this.sequelize = sequelize
         this.commands = new Map()
         this.timers = new Map()
-
-        // this.periodicSync = null
-        // this.syncing = false
-        // this.db = db
     }
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -731,7 +732,9 @@ export default class Accomplice extends Client {
                     await message.delete()
                 } else {
                     this.logger.debug('Leaderboard embed updated')
-                    await message.edit('hello world')
+                    await message.edit(
+                        `hello world ${new Date().toDateString()} ${new Date().toTimeString()}`
+                    )
                 }
                 return
             }
@@ -750,6 +753,67 @@ export default class Accomplice extends Client {
                     uuid: leaderboard.uuid
                 }
             }
+        )
+    }
+
+    public async locateLeaderboardsForReaction(
+        reaction: Reaction,
+        guildId: string
+    ): Promise<string[]> {
+        const { Tracker, LeaderboardTrackers } = this.sequelize.models
+        const trackers: Pick<Tracker, 'uuid'>[] = await Tracker.findAll({
+            attributes: ['uuid'],
+            group: ['uuid'],
+            where: {
+                [Op.and]: [
+                    {
+                        [Op.or]: [
+                            {
+                                reactionType: reaction.type
+                            },
+                            {
+                                reactionContent: reaction.content
+                            }
+                            // TODO:
+                            // {
+                            //     reacteeUserId: reaction.reacteeUserId
+                            // },
+                            // {
+                            //     reactorUserId: reaction.reactorUserId
+                            // }
+                        ]
+                    },
+                    {
+                        guildId
+                    }
+                ]
+            }
+        })
+
+        const leaderboardConditional: { trackerId: string }[] = trackers.map(
+            tracker => ({ trackerId: tracker.uuid })
+        )
+
+        const leaderboardTrackers: Pick<
+            LeaderboardTrackers,
+            'leaderboardId'
+        >[] = await LeaderboardTrackers.findAll({
+            attributes: ['leaderboardId'],
+            group: ['leaderboardId'],
+            where: {
+                [Op.and]: [
+                    {
+                        [Op.or]: leaderboardConditional
+                    },
+                    {
+                        guildId
+                    }
+                ]
+            }
+        })
+
+        return leaderboardTrackers.map(
+            leaderboardTracker => leaderboardTracker.leaderboardId
         )
     }
 

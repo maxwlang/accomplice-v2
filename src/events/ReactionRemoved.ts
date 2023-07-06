@@ -60,18 +60,22 @@ export default class ReactionRemoved implements EventHandle {
         const reacteeIsBot = messageReaction.message.author.bot
         const reactorSnowflake = reactorUser.id
         const reactorIsBot = reactorUser.bot
+        let reaction: Reaction | undefined
+        let guildRow: Guild | undefined
 
         try {
-            const [guildRow, guildCreated]: [Guild, boolean] =
-                await Guild.findOrCreate({
-                    where: { snowflake: messageReaction.message.guildId },
-                    defaults: {
-                        uuid: uuidv4(),
-                        snowflake: messageReaction.message.guildId,
-                        isPriority: false,
-                        commandsState: []
-                    }
-                })
+            const guildData: [Guild, boolean] = await Guild.findOrCreate({
+                where: { snowflake: messageReaction.message.guildId },
+                defaults: {
+                    uuid: uuidv4(),
+                    snowflake: messageReaction.message.guildId,
+                    isPriority: false,
+                    commandsState: []
+                }
+            })
+
+            guildRow = guildData[0]
+            const guildCreated = guildData[1]
 
             if (guildCreated) bot.logger.debug('Created guild')
 
@@ -131,7 +135,7 @@ export default class ReactionRemoved implements EventHandle {
                 return
             }
 
-            const reaction: Reaction = await Reaction.findOne({
+            reaction = await Reaction.findOne({
                 where: {
                     guildId: guildRow.uuid,
                     type: emojiType,
@@ -159,7 +163,24 @@ export default class ReactionRemoved implements EventHandle {
             return
         }
 
-        // update leaderboard
-        // bot.updateLeaderboardEmbeds(messageReaction.message.guildId)
+        if (!reaction || !guildRow) return
+
+        try {
+            const leaderboardIds = await bot.locateLeaderboardsForReaction(
+                reaction,
+                guildRow.uuid
+            )
+
+            const leaderboardUpdates: Promise<void>[] = []
+            for (const leaderboardId of leaderboardIds) {
+                leaderboardUpdates.push(
+                    bot.createOrUpdateLeaderboardEmbed(leaderboardId)
+                )
+            }
+
+            await Promise.allSettled(leaderboardUpdates)
+        } catch (e) {
+            bot.logger.error(`Failed to update leaderboard(s): ${e}`)
+        }
     }
 }

@@ -62,18 +62,21 @@ export default class ReactionAdded implements EventHandle {
         const reactorSnowflake = reactorUser.id
         const reactorIsBot = reactorUser.bot
         let reaction: Reaction | undefined
+        let guildRow: Guild | undefined
 
         try {
-            const [guildRow, guildCreated]: [Guild, boolean] =
-                await Guild.findOrCreate({
-                    where: { snowflake: messageReaction.message.guildId },
-                    defaults: {
-                        uuid: uuidv4(),
-                        snowflake: messageReaction.message.guildId,
-                        isPriority: false,
-                        commandsState: []
-                    }
-                })
+            const guildData: [Guild, boolean] = await Guild.findOrCreate({
+                where: { snowflake: messageReaction.message.guildId },
+                defaults: {
+                    uuid: uuidv4(),
+                    snowflake: messageReaction.message.guildId,
+                    isPriority: false,
+                    commandsState: []
+                }
+            })
+
+            guildRow = guildData[0]
+            const guildCreated = guildData[1]
 
             if (guildCreated) bot.logger.debug('Created guild')
 
@@ -150,12 +153,22 @@ export default class ReactionAdded implements EventHandle {
             return
         }
 
-        if (!reaction) return
+        if (!reaction || !guildRow) return
 
         try {
-            // from reaction
-            // for each tracker
-            bot.createOrUpdateLeaderboardEmbed()
+            const leaderboardIds = await bot.locateLeaderboardsForReaction(
+                reaction,
+                guildRow.uuid
+            )
+
+            const leaderboardUpdates: Promise<void>[] = []
+            for (const leaderboardId of leaderboardIds) {
+                leaderboardUpdates.push(
+                    bot.createOrUpdateLeaderboardEmbed(leaderboardId)
+                )
+            }
+
+            await Promise.allSettled(leaderboardUpdates)
         } catch (e) {
             bot.logger.error(`Failed to update leaderboard(s): ${e}`)
         }

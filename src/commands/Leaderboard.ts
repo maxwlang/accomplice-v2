@@ -456,6 +456,7 @@ export default class LeaderboardCommand implements Command {
             `Created leaderboard tracker ${leaderboardTracker.uuid}`
         )
 
+        await bot.createOrUpdateLeaderboardEmbed(leaderboard.uuid)
         await interaction.reply('The tracker has been added')
     }
 
@@ -525,6 +526,7 @@ export default class LeaderboardCommand implements Command {
         })
 
         await interaction.reply('The tracker has been removed')
+        await bot.createOrUpdateLeaderboardEmbed(leaderboard.uuid)
     }
 
     private async listLeaderboard(

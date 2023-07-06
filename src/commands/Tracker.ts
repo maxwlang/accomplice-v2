@@ -147,9 +147,7 @@ export default class LeaderboardCommand implements Command {
             reactionType = ReactionType.Emoji
             reactionContent = reaction
         } else if (guildEmojiNumbers) {
-            console.log(guildEmojiNumbers)
             const guildEmoji = bot.emojis.cache.get(guildEmojiNumbers)
-            console.log(guildEmoji)
             if (guildEmoji) {
                 reactionType = ReactionType.Custom
                 if (guildEmoji.animated) ReactionType.CustomGIF

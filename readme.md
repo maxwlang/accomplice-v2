@@ -3,10 +3,11 @@ Discord Leaderboards and Starboards done right
 
 ## TODO In priority order
 - Finish leaderboard
-    - [X] commands
-    - [X] build leaderboard createorupdate function
-    - [X] restore leaderboard on startup
-    - [] Trigger leaderboard createorupdate on reaction add, reaction remove, leaderboard create, leaderboard destroy
+    - [x] commands
+    - [x] build leaderboard createorupdate function
+    - [x] restore leaderboard on startup
+    - [x] Trigger leaderboard createorupdate on reaction add, reaction remove
+    - [x] Trigger leaderboard createorupdate on leaderboard tracker add, leaderboard tracker remove
     - [] Dynamically populate leaderboard
     - [] Update leaderboard createorupdate function
     - [] Add leaderboard embed components
