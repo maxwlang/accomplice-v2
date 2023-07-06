@@ -65,7 +65,6 @@ export default class TrackerList implements Embed {
                         tracker.reactionContent,
                         tracker.reactionType === ReactionType.CustomGIF
                     )
-                    console.log({ reaction, type: tracker.reactionType })
                 }
 
                 break

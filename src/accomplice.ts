@@ -719,7 +719,6 @@ export default class Accomplice extends Client {
 
         const messageId = leaderboard.messageSnowflake
         if (messageId) {
-            console.log(leaderboardChannel.id)
             const messages = await leaderboardChannel.messages.fetch({
                 around: messageId,
                 limit: 1
@@ -732,9 +731,14 @@ export default class Accomplice extends Client {
                     await message.delete()
                 } else {
                     this.logger.debug('Leaderboard embed updated')
-                    await message.edit(
-                        `hello world ${new Date().toDateString()} ${new Date().toTimeString()}`
-                    )
+                    const leaderboardEmbed = new LeaderboardEmbed()
+                    await message.edit({
+                        embeds: [leaderboardEmbed.getEmbed({ leaderboard })],
+                        components: [
+                            // @ts-expect-error This works even though the type is not supported. TODO: Make this comment  unnecessary
+                            leaderboardEmbed.getComponents(leaderboard)
+                        ]
+                    })
                 }
                 return
             }
@@ -743,7 +747,11 @@ export default class Accomplice extends Client {
         this.logger.debug('creating leaderboard embed')
         const leaderboardEmbed = new LeaderboardEmbed()
         const sentMessage = await leaderboardChannel.send({
-            embeds: [leaderboardEmbed.getEmbed({ leaderboard })]
+            embeds: [leaderboardEmbed.getEmbed({ leaderboard })],
+            components: [
+                // @ts-expect-error This works even though the type is not supported. TODO: Make this comment  unnecessary
+                leaderboardEmbed.getComponents(leaderboard)
+            ]
         })
 
         await Leaderboard.update(
