@@ -1,35 +1,47 @@
 import {
-    // APIActionRowComponent,
     ActionRowBuilder,
     AnyComponentBuilder,
-    // AnyComponentBuilder,
-    // ComponentBuilder,
-    // ComponentType,
     EmbedBuilder,
-    // RestOrArray,
     StringSelectMenuBuilder,
     StringSelectMenuOptionBuilder
 } from 'discord.js'
 import Embed from '../types/Embed'
 import { Leaderboard } from '../sequelize/types/leaderboard'
-// import { Tracker } from '../sequelize/types/tracker'
+import { Tracker } from '../sequelize/types/tracker'
+import { avatarDisplayName } from '../config/discord'
 
 export default class LeaderboardEmbed implements Embed {
     public getEmbed({
-        leaderboard
-    }: // trackers
-    {
+        leaderboard,
+        trackers,
+        selectedTracker
+    }: {
         leaderboard: Leaderboard
-        // trackers: Tracker[]
+        trackers: Tracker[]
+        selectedTracker?: string
     }): EmbedBuilder {
+        const tracker = this.getTracker(trackers, selectedTracker)
         const embed = new EmbedBuilder()
-            .setTitle('Leaderboard')
+            .setTitle('Leaderboard') // TODO: allow setting leaderboard names
+            .setAuthor({
+                name: avatarDisplayName
+            })
             .setColor('Gold')
-            .setDescription('')
+            .setDescription(
+                `${
+                    !tracker
+                        ? 'There are no trackers assigned to this leaderboard.'
+                        : `Displaying statistics for ${tracker.name}.`
+                }`
+            )
             .setTimestamp()
-            .setFooter({ text: `ref: ${leaderboard.uuid}` })
+            .setFooter({
+                text: `ref: ${leaderboard.uuid}${
+                    tracker ? ` | ${tracker.uuid}` : ''
+                }`
+            })
             .setThumbnail(
-                'https://badgeos.org/wp-content/uploads/edd/2013/11/leaderboard.png'
+                'https://badgeos.org/wp-content/uploads/edd/2013/11/leaderboard.png' // TODO: Support custom tracker icons
             )
 
         embed.addFields(
@@ -89,32 +101,52 @@ export default class LeaderboardEmbed implements Embed {
         return embed
     }
 
-    public getComponents = (
+    public getComponents = ({
+        leaderboard,
+        trackers,
+        selectedTracker
+    }: {
         leaderboard: Leaderboard
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    ): ActionRowBuilder<AnyComponentBuilder> => {
+        trackers: Tracker[]
+        selectedTracker?: string
+    }): ActionRowBuilder<AnyComponentBuilder> => {
+        const defaultTracker = this.getTracker(trackers, selectedTracker)
+
+        const trackerOptions = trackers.map(tracker =>
+            new StringSelectMenuOptionBuilder()
+                .setLabel(tracker.name ?? `${tracker.uuid}`) // TODO: require a tracker name
+                .setEmoji('⭐') // TODO: make tracker create command ask for a display emoji
+                .setValue(tracker.uuid)
+                .setDefault(
+                    defaultTracker
+                        ? defaultTracker.uuid === tracker.uuid
+                        : false
+                )
+        )
+
         const selectMenu = new StringSelectMenuBuilder()
             .setCustomId(`leaderboardSelect:${leaderboard.uuid}`)
             .setPlaceholder('Select a Tracker')
             .setMaxValues(1)
             .setMinValues(1)
-            .setOptions(
-                new StringSelectMenuOptionBuilder()
-                    .setLabel('⭐ Starboard')
-                    .setEmoji('⭐')
-                    .setValue('11111-22222-33333-44444-55555'),
-                new StringSelectMenuOptionBuilder()
-                    .setLabel('Bitchboard')
-                    .setEmoji('⭐')
-                    .setValue('66666-777777-8888888-99999999')
-            )
+            .setOptions(trackerOptions)
 
         return new ActionRowBuilder().addComponents(selectMenu)
     }
-    // new MessageActionRowComponentBuilder().addComponents(
-    //     new MessageSelectMenu()
-    //         .setCustomId('updateLeaderboard')
-    //         .setPlaceholder(`${emoji} Leaderboard`)
-    //         .addOptions(selectOptions)
-    // )
+
+    private getTracker = (
+        trackers: Tracker[],
+        selectedTracker?: string
+    ): Tracker | undefined => {
+        const sortedTrackers = trackers.sort()
+        let tracker: Tracker | undefined = sortedTrackers[0]
+
+        if (selectedTracker) {
+            tracker = sortedTrackers.find(
+                sortedTracker => sortedTracker.uuid === selectedTracker
+            )
+        }
+
+        return tracker
+    }
 }

@@ -11,7 +11,8 @@ Discord Leaderboards and Starboards done right
     - [ ] Dynamically populate leaderboard
         - [x] Update leaderboard createorupdate function
         - [x] Start templating out components
-        - [ ] Figure out why embed updates are not working. request is not erroring
+        - [x] Figure out why embed updates are not working. request is not erroring
+        - [ ] Generate leaderboard content
     - [ ] Add leaderboard embed components
     - [ ] Handle leaderboard embed component events
 - Store sync state for guild channels on guild table [{channelSnowflake: 12345, latestMessageSnowflake: 12345}], allows recovering missed messages when offline
