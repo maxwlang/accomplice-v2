@@ -15,7 +15,8 @@ module.exports = (sequelize, DataTypes) => {
         {
             uuid: { type: DataTypes.UUID, unique: true },
             guildId: { type: DataTypes.UUID, allowNull: false },
-            name: { type: DataTypes.STRING, allowNull: true },
+            name: { type: DataTypes.STRING, allowNull: false },
+            imageUrl: { type: DataTypes.STRING, allowNull: true },
             length: {
                 type: DataTypes.INTEGER,
                 allowNull: false

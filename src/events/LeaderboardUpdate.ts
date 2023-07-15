@@ -19,7 +19,6 @@ export default class LeaderboardUpdate implements EventHandle {
         if (!args || isEmpty(args)) return
         bot.logger.info(`${this.trigger} fired`)
         const interaction = args[0] as StringSelectMenuInteraction
-        // await interaction.deferReply() // defer update?
         const customId = interaction.customId
         if (customId.split(':')[0] !== 'leaderboardSelect') return
         const leaderboardId = customId.split(':')[1]

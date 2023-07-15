@@ -38,6 +38,11 @@ const activityNames = [
     'grandma',
     'the voices',
     'Sandwich Simulator'
+    // 3 guilds
+    // 3 starboards
+    // 3 leaderboards
+    // 500 users
+    // 6000 reactions
 ]
 
 const activityTypes: Exclude<ActivityType, ActivityType.Custom>[] = [

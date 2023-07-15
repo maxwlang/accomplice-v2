@@ -16,6 +16,6 @@ export default class LeaderboardStartup implements EventHandle {
             bot.createOrUpdateLeaderboardEmbed(leaderboard.uuid)
         )
 
-        await Promise.allSettled(leaderboardTasks)
+        await Promise.allSettled(leaderboardTasks).catch(e => console.log(e))
     }
 }

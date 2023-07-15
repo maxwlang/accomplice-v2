@@ -39,9 +39,10 @@ export default class LeaderboardCommand implements Command {
                     option
                         .setName('name')
                         .setDescription(
-                            'An optional statistic name associated with the react'
+                            'A name associated with the tracker, displayed on leaderboard'
                         )
                         .setMaxLength(32)
+                        .setRequired(true)
                 )
                 .addIntegerOption(option =>
                     option
@@ -114,16 +115,9 @@ export default class LeaderboardCommand implements Command {
     ): Promise<void> {
         const { Tracker, Guild } = bot.sequelize.models
 
-        const reaction = interaction.options.getString('reaction')
-        const displayName = interaction.options.getString('name')
+        const reaction = interaction.options.getString('reaction', true)
+        const displayName = interaction.options.getString('name', true)
         const trackerLength = interaction.options.getInteger('length') ?? 9
-
-        // We shouldn't hit this, but for type safety & sanity we'll check it
-        if (!reaction || reaction === null) {
-            bot.logger.debug('No reaction supplied, will not create tracker')
-            await interaction.reply('Please supply a reaction to track')
-            return
-        }
 
         if (displayName && displayName.length > 32) {
             bot.logger.debug(
@@ -233,9 +227,9 @@ export default class LeaderboardCommand implements Command {
         interaction: ChatInputCommandInteraction
     ): Promise<void> {
         const actionConfirm = interaction.options.getBoolean('confirm', true)
-        if (!actionConfirm) {
+        if (actionConfirm !== true) {
             await interaction.reply(
-                'Please confirm this destructive action using the `confirm` command argument'
+                'Please confirm this destructive action by setting the `confirm` command argument to true'
             )
 
             return

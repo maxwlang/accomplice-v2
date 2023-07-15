@@ -198,8 +198,8 @@ export default class LeaderboardCommand implements Command {
             return
         }
 
-        const channel = interaction.options.getChannel('channel')
-        if (!channel || channel === null) {
+        const channel = interaction.options.getChannel('channel', true)
+        if (channel === null) {
             bot.logger.error('Failed to resolve channel option')
             await interaction.reply(
                 'An error occured while locating the channel for the leaderboard'
@@ -251,7 +251,7 @@ export default class LeaderboardCommand implements Command {
         const actionConfirm = interaction.options.getBoolean('confirm', true)
         if (!actionConfirm) {
             await interaction.reply(
-                'Please confirm this destructive action using the `confirm` command argument'
+                'Please confirm this destructive action by setting the `confirm` command argument to true'
             )
 
             return
@@ -271,7 +271,7 @@ export default class LeaderboardCommand implements Command {
             return
         }
 
-        const channel = interaction.options.getChannel('channel')
+        const channel = interaction.options.getChannel('channel', true)
         if (channel === null) {
             bot.logger.error('Failed to resolve channel option')
             await interaction.reply(

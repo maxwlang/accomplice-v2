@@ -8,7 +8,10 @@ export interface Tracker {
     guildId: string
 
     // The tracker display name
-    name: string | null
+    name: string
+
+    // An optional image url to display
+    imageUrl: string | null
 
     // The amount of entries to display on the leaderboard
     length: number

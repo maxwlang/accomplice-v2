@@ -6,5 +6,11 @@ export default interface Embed {
     getComponents: (
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         args?: any
-    ) => Promise<ComponentBuilder> | ComponentBuilder | null
+    ) =>
+        | Promise<ComponentBuilder>
+        | ComponentBuilder
+        | Promise<ComponentBuilder[]>
+        | ComponentBuilder[]
+        | null
+        | undefined
 }

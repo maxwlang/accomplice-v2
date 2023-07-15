@@ -692,7 +692,7 @@ export default class Accomplice extends Client {
         leaderboardId: string,
         deleteEmbed?: true
     ): Promise<void> {
-        const { Leaderboard, LeaderboardTrackers, Tracker } =
+        const { Leaderboard, LeaderboardTrackers, Tracker, Reaction } =
             this.sequelize.models
         this.logger.debug(`Create or update leaderboard ${leaderboardId}`)
 
@@ -708,8 +708,7 @@ export default class Accomplice extends Client {
             return
         }
 
-        // Get leaderboard channel
-        const leaderboardChannel = await this.channels.fetch(
+        const leaderboardChannel = await this.channels.resolve(
             leaderboard.channelSnowflake
         )
 
@@ -735,6 +734,21 @@ export default class Accomplice extends Client {
             }
         })
 
+        // const reactions: Reaction[] = await Reaction.findAll({
+        //     where: {
+        //         [Op.or]: trackers.map(tracker => ({
+        //             uuid: tracker.
+        //         }))
+        //     }
+        // })
+
+        const leaderboardEmbed = new LeaderboardEmbed()
+        const embed = leaderboardEmbed.getEmbed({ leaderboard, trackers })
+        const components = leaderboardEmbed.getComponents({
+            leaderboard,
+            trackers
+        })
+
         const messageId = leaderboard.messageSnowflake
         if (messageId) {
             const messages = await leaderboardChannel.messages.fetch({
@@ -748,18 +762,10 @@ export default class Accomplice extends Client {
                     await message.delete()
                     this.logger.debug('Leaderboard embed deleted')
                 } else {
-                    const leaderboardEmbed = new LeaderboardEmbed()
                     await message.edit({
-                        embeds: [
-                            leaderboardEmbed.getEmbed({ leaderboard, trackers })
-                        ],
-                        components: [
-                            // @ts-expect-error This works even though the type is not supported. TODO: Make this comment unnecessary
-                            leaderboardEmbed.getComponents({
-                                leaderboard,
-                                trackers
-                            })
-                        ]
+                        embeds: [embed],
+                        // @ts-expect-error This works even though the type is not supported. TODO: Make this comment unnecessary
+                        components
                     })
                     this.logger.debug('Leaderboard embed updated')
                 }
@@ -767,15 +773,17 @@ export default class Accomplice extends Client {
             }
         }
 
-        const leaderboardEmbed = new LeaderboardEmbed()
-        const sentMessage = await leaderboardChannel.send({
-            embeds: [leaderboardEmbed.getEmbed({ leaderboard, trackers })],
-            components: [
+        console.log('=-as=dsa-=-as=d-asd=as-d=as-d=as-d')
+
+        const sentMessage = await leaderboardChannel
+            .send({
+                embeds: [embed],
                 // @ts-expect-error This works even though the type is not supported. TODO: Make this comment unnecessary
-                leaderboardEmbed.getComponents({ leaderboard, trackers })
-            ]
-        })
+                components
+            })
+            .catch(e => console.log(e))
         this.logger.debug('leaderboard embed created')
+        if (!sentMessage) return
 
         await Leaderboard.update(
             { messageSnowflake: sentMessage.id },
