@@ -6,29 +6,32 @@ import {
     StringSelectMenuOptionBuilder,
     bold,
     formatEmoji,
-    inlineCode
+    inlineCode,
+    userMention
 } from 'discord.js'
 import Embed from '../types/Embed'
 import { Leaderboard } from '../sequelize/types/leaderboard'
 import { Tracker } from '../sequelize/types/tracker'
 import { avatarDisplayName } from '../config/discord'
-import { ReactionType } from '../sequelize/types/reaction'
+import { ReactionCount, ReactionType } from '../sequelize/types/reaction'
 import { titleCase } from '../util/strings'
 
 export default class LeaderboardEmbed implements Embed {
     public getEmbed({
         leaderboard,
         trackers,
+        trackerReactions,
         selectedTracker
     }: {
         leaderboard: Leaderboard
         trackers: Tracker[]
+        trackerReactions: Map<string, ReactionCount[]>
         selectedTracker?: string
     }): EmbedBuilder {
         const tracker = this.getTracker(trackers, selectedTracker)
 
         if (!tracker) return this.noTrackerEmbed(leaderboard)
-        return this.leaderboardEmbed(leaderboard, tracker)
+        return this.leaderboardEmbed(leaderboard, tracker, trackerReactions)
     }
 
     public getComponents = ({
@@ -114,7 +117,8 @@ export default class LeaderboardEmbed implements Embed {
 
     private leaderboardEmbed = (
         leaderboard: Leaderboard,
-        tracker: Tracker
+        tracker: Tracker,
+        trackerReactions: Map<string, ReactionCount[]>
     ): EmbedBuilder => {
         let displayEmoji = '📊'
 
@@ -148,15 +152,39 @@ export default class LeaderboardEmbed implements Embed {
                     ? tracker.imageUrl
                     : 'https://badgeos.org/wp-content/uploads/edd/2013/11/leaderboard.png'
             )
-            .setDescription(
-                `Displaying top ${tracker.length} ${displayEmoji} earners.`
+
+        const reactions = trackerReactions.get(tracker.uuid)
+        if (!reactions || reactions.length === 0) {
+            embed.setDescription(
+                `Nobody has been reacted with ${displayEmoji}..`
             )
 
-        // embed.addFields({
-        //     name: `${i + 1}. ${user.username}`,
-        //     value: `${visualEmoji} - ${leaderboard[i].total}`,
-        //     inline: true
-        // })
+            return embed
+        }
+
+        embed.setDescription(
+            `Displaying up to the top ${tracker.length} ${displayEmoji} earners.`
+        )
+
+        let i = 1
+        for (const reaction of reactions) {
+            embed.addFields({
+                name: `${this.nth(i)}.`,
+                value: `${userMention(
+                    reaction.dataValues.reacteeUserSnowflake
+                )}\n${displayEmoji} - ${reaction.dataValues.amount}`,
+                inline: true
+            })
+            i++
+        }
+
         return embed
+    }
+
+    // https://stackoverflow.com/a/39466341
+    private nth(n: number): string {
+        return `${n}${
+            ['st', 'nd', 'rd'][((((n + 90) % 100) - 10) % 10) - 1] || 'th'
+        }`
     }
 }

@@ -6,6 +6,10 @@ export enum ReactionType {
     CustomSuperGif = 'customSuperGif'
 }
 
+export type ReactionCount = Pick<Reaction, 'reacteeUserId'> & {
+    dataValues: { amount: number; reacteeUserSnowflake: string }
+}
+
 export interface Reaction {
     // A unique guid for the reaction event
     uuid: string

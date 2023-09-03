@@ -30,7 +30,11 @@ import { User } from './sequelize/types/user'
 import { getEmojiType } from './util/emoji'
 import { isNil } from 'ramda'
 import { Tracker } from './sequelize/types/tracker'
-import { Reaction } from './sequelize/types/reaction'
+import {
+    Reaction,
+    ReactionCount,
+    ReactionType
+} from './sequelize/types/reaction'
 
 import { Op } from 'sequelize'
 import { LeaderboardTrackers } from './sequelize/types/leaderboard_trackers'
@@ -690,6 +694,7 @@ export default class Accomplice extends Client {
 
     public async createOrUpdateLeaderboardEmbed(
         leaderboardId: string,
+        selectedTracker?: string,
         deleteEmbed?: true
     ): Promise<void> {
         const { Leaderboard, LeaderboardTrackers, Tracker, Reaction } =
@@ -734,19 +739,63 @@ export default class Accomplice extends Client {
             }
         })
 
-        // const reactions: Reaction[] = await Reaction.findAll({
-        //     where: {
-        //         [Op.or]: trackers.map(tracker => ({
-        //             uuid: tracker.
-        //         }))
-        //     }
-        // })
+        const trackerReactions: Map<string, ReactionCount[]> = new Map()
+        for (const tracker of trackers) {
+            const where: {
+                guildId: string
+                type: ReactionType | null
+                content?: string | null
+                emojiId?: string | null
+            } = {
+                guildId: tracker.guildId,
+                type: tracker.reactionType
+            }
+
+            if (tracker.reactionType === ReactionType.Emoji) {
+                where.content = tracker.reactionContent
+            } else {
+                where.emojiId = tracker.reactionContent
+            }
+            const reactions: ReactionCount[] = await Reaction.findAll({
+                attributes: [
+                    'reacteeUserId',
+                    // Note the wrapping parentheses in the call below!
+                    [
+                        this.sequelize.literal(`(
+                    SELECT snowflake
+                    FROM Users AS user
+                    WHERE user.uuid = Reaction.reacteeUserId
+                )`),
+                        'reacteeUserSnowflake'
+                    ],
+                    [
+                        this.sequelize.fn(
+                            'COUNT',
+                            this.sequelize.col('reacteeUserId')
+                        ),
+                        'amount'
+                    ]
+                ],
+                group: 'reacteeUserId',
+                where,
+                limit: tracker.length,
+                order: [['amount', 'DESC']]
+            })
+
+            trackerReactions.set(tracker.uuid, reactions)
+        }
 
         const leaderboardEmbed = new LeaderboardEmbed()
-        const embed = leaderboardEmbed.getEmbed({ leaderboard, trackers })
+        const embed = leaderboardEmbed.getEmbed({
+            leaderboard,
+            trackers,
+            trackerReactions,
+            selectedTracker
+        })
         const components = leaderboardEmbed.getComponents({
             leaderboard,
-            trackers
+            trackers,
+            selectedTracker
         })
 
         const messageId = leaderboard.messageSnowflake
@@ -772,8 +821,6 @@ export default class Accomplice extends Client {
                 return
             }
         }
-
-        console.log('=-as=dsa-=-as=d-asd=as-d=as-d=as-d')
 
         const sentMessage = await leaderboardChannel
             .send({

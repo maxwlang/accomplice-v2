@@ -8,13 +8,16 @@ Discord Leaderboards and Starboards done right
     - [x] restore leaderboard on startup
     - [x] Trigger leaderboard createorupdate on reaction add, reaction remove
     - [x] Trigger leaderboard createorupdate on leaderboard tracker add, leaderboard tracker remove
-    - [ ] Dynamically populate leaderboard
+    - [x] Dynamically populate leaderboard
         - [x] Update leaderboard createorupdate function
         - [x] Start templating out components
         - [x] Figure out why embed updates are not working. request is not erroring
-        - [ ] Generate leaderboard content
-    - [ ] Add leaderboard embed components
-    - [ ] Handle leaderboard embed component events
+        - [x] Generate leaderboard content
+    - [x] Add leaderboard embed components
+    - [x] Handle leaderboard embed component events
+    - [ ] leaderboard options, for example excluding missing users, bots, and specific users
+    - [ ] leaderboard default tracker option
+    - [ ] leaderboard option for switching embed to stats for most recent embed
 - Store sync state for guild channels on guild table [{channelSnowflake: 12345, latestMessageSnowflake: 12345}], allows recovering missed messages when offline
 - Fix issue where gif emotes are registered as non-gif custom emotes
 - For required command options, set second arg to true on interaction.options.get<whatever>(..., true)

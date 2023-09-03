@@ -20,14 +20,13 @@ export default class LeaderboardUpdate implements EventHandle {
         bot.logger.info(`${this.trigger} fired`)
         const interaction = args[0] as StringSelectMenuInteraction
         const customId = interaction.customId
-        if (customId.split(':')[0] !== 'leaderboardSelect') return
-        const leaderboardId = customId.split(':')[1]
-        console.log({ leaderboardId })
+        if (!customId || customId.split(':')[0] !== 'leaderboardSelect') return
 
-        await interaction.reply({
-            content: 'Nah bruh, nah. Not setup yet bruh',
-            ephemeral: true
-        })
+        const leaderboardId = customId.split(':')[1]
+        const trackerId = interaction.values[0]
+
+        await bot.createOrUpdateLeaderboardEmbed(leaderboardId, trackerId)
+        await interaction.deferUpdate()
 
         return
     }
