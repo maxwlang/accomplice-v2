@@ -20,8 +20,20 @@ export interface Tracker {
     // For tracking by: The kind of reaction
     reactionType: ReactionType | null
 
+    // Should bots be included in the leaderboard?
+    displayBots: boolean
+
+    // Should users who have left the guild be included in the leaderboard?
+    displayMissingUsers: boolean
+
     // For tracking by: The content in the reaction, ex: snowflake or 😊
     reactionContent: string | null
+
+    // Should the tracker count reactions where a user reacted to their own message?
+    recognizeSelfReactions: boolean
+
+    // Should the tracker count reactions where a bot reacted to a message?
+    recognizeBotReactions: boolean
 
     // TODO:
     // For tracking by: The user who received the reaction

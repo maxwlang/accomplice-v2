@@ -14,7 +14,6 @@ import {
     channelMention,
     inlineCode
 } from 'discord.js'
-// import { Tracker } from '../sequelize/types/tracker'
 
 export default class LeaderboardCommand implements Command {
     // Should be admin perms
@@ -53,6 +52,38 @@ export default class LeaderboardCommand implements Command {
                         )
                         .setMinValue(1)
                 )
+                .addBooleanOption(option =>
+                    option
+                        .setName('display-bots')
+                        .setDescription(
+                            'Should bots be displayed on the leaderboard (Default: false)'
+                        )
+                        .setRequired(false)
+                )
+                .addBooleanOption(option =>
+                    option
+                        .setName('display-missing-users')
+                        .setDescription(
+                            'Should users who have left the server be displayed on the leaderboard (Default: false)'
+                        )
+                        .setRequired(false)
+                )
+                .addBooleanOption(option =>
+                    option
+                        .setName('recognize-self-reactions')
+                        .setDescription(
+                            'Should this tracker count a user who reacts to their own message (Default: false)'
+                        )
+                        .setRequired(false)
+                )
+                .addBooleanOption(option =>
+                    option
+                        .setName('recognize-bot-reactions')
+                        .setDescription(
+                            'Should this tracker count a bot who reacts to a message (Default: false)'
+                        )
+                        .setRequired(false)
+                )
         )
         // tracker - destroy
         .addSubcommand(subCommand =>
@@ -84,6 +115,8 @@ export default class LeaderboardCommand implements Command {
                 .setName('list')
                 .setDescription('Lists trackers on the guild')
         )
+    // tracker - update
+    // TODO
 
     public execute = async ({
         bot,
@@ -119,6 +152,14 @@ export default class LeaderboardCommand implements Command {
         const reaction = interaction.options.getString('reaction', true)
         const displayName = interaction.options.getString('name', true)
         const trackerLength = interaction.options.getInteger('length') ?? 9
+        const displayBots =
+            interaction.options.getBoolean('display-bots') ?? false
+        const displayMissingUsers =
+            interaction.options.getBoolean('display-missing-users') ?? false
+        const recognizeSelfReactions =
+            interaction.options.getBoolean('recognize-self-reactions') ?? false
+        const recognizeBotReactions =
+            interaction.options.getBoolean('recognize-bot-reactions') ?? false
 
         if (displayName && displayName.length > 32) {
             bot.logger.debug(
@@ -180,7 +221,11 @@ export default class LeaderboardCommand implements Command {
                     guildId: guild.uuid,
                     name: displayName,
                     reactionType,
-                    reactionContent
+                    reactionContent,
+                    displayBots,
+                    displayMissingUsers,
+                    recognizeSelfReactions,
+                    recognizeBotReactions
                 },
                 defaults: {
                     uuid: uuidv4(),

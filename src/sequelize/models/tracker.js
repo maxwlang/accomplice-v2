@@ -22,6 +22,26 @@ module.exports = (sequelize, DataTypes) => {
                 allowNull: false
             },
             reactionType: { type: DataTypes.STRING, allowNull: true },
+            displayBots: {
+                type: DataTypes.BOOLEAN,
+                allowNull: false,
+                defaultValue: false
+            },
+            displayMissingUsers: {
+                type: DataTypes.BOOLEAN,
+                allowNull: false,
+                defaultValue: false
+            },
+            recognizeSelfReactions: {
+                type: DataTypes.BOOLEAN,
+                allowNull: false,
+                defaultValue: false
+            },
+            recognizeBotReactions: {
+                type: DataTypes.BOOLEAN,
+                allowNull: false,
+                defaultValue: false
+            },
 
             // At least one of these needs to be provided:
             reactionContent: { type: DataTypes.STRING, allowNull: true } // Tracking by content
