@@ -23,27 +23,20 @@ export default class TrackerList implements Embed {
                     'There are no trackers configured for this guild'
                 )
         } else {
-            // TODO: Clean this up, make the embed look better
             return embed.setDescription(
                 `This guild has ${trackers.length} ${
                     trackers.length === 1 ? 'tracker' : 'trackers'
-                }.\n\n${bold('Guild Trackers:')}\n${trackers
+                }.\n\n${bold('Name')} - ${bold('Reaction')} - ${bold(
+                    'Leaderboard Size'
+                )}\n${trackers
                     .map(tracker => {
-                        return `- ${
-                            tracker.name
-                                ? `${tracker.name}`
-                                : `${
-                                      tracker.reactionType ===
-                                      ReactionType.Emoji
-                                          ? `${tracker.reactionContent} Tracker`
-                                          : 'Custom Tracker'
-                                  } `
-                        }\n- - ID: ${inlineCode(
-                            tracker.uuid
-                        )}\n- - Reaction: ${this.mapReaction(tracker)}
-                        \n- - Leaderboard Size: ${tracker.length} Users`
+                        let line = `${tracker.name} -`
+                        line += ` ${this.mapReaction(tracker)} -`
+                        line += ` ${tracker.length}\n`
+                        line += `ID: ${inlineCode(tracker.uuid)}\n\n`
+                        return line
                     })
-                    .join('\n\n')}`
+                    .join('')}`
             )
         }
     }
