@@ -24,6 +24,10 @@ module.exports = (sequelize, DataTypes) => {
                 type: DataTypes.STRING,
                 unique: true,
                 allowNull: true
+            },
+            defaultLeaderboardTrackerId: {
+                type: DataTypes.UUID,
+                allowNull: true
             }
         },
         {

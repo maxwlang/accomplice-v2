@@ -1,3 +1,9 @@
+import Embed from '../types/Embed'
+import { Leaderboard } from '../sequelize/types/leaderboard'
+import { Tracker } from '../sequelize/types/tracker'
+import { avatarDisplayName } from '../config/discord'
+import { titleCase } from '../util/strings'
+
 import {
     ActionRowBuilder,
     AnyComponentBuilder,
@@ -9,26 +15,21 @@ import {
     inlineCode,
     userMention
 } from 'discord.js'
-import Embed from '../types/Embed'
-import { Leaderboard } from '../sequelize/types/leaderboard'
-import { Tracker } from '../sequelize/types/tracker'
-import { avatarDisplayName } from '../config/discord'
 import { ReactionCount, ReactionType } from '../sequelize/types/reaction'
-import { titleCase } from '../util/strings'
 
 export default class LeaderboardEmbed implements Embed {
     public getEmbed({
         leaderboard,
         trackers,
         trackerReactions,
-        selectedTracker
+        selectedTrackerId
     }: {
         leaderboard: Leaderboard
         trackers: Tracker[]
         trackerReactions: Map<string, ReactionCount[]>
-        selectedTracker?: string
+        selectedTrackerId?: string
     }): EmbedBuilder {
-        const tracker = this.getTracker(trackers, selectedTracker)
+        const tracker = this.getTracker(trackers, selectedTrackerId)
 
         if (!tracker) return this.noTrackerEmbed(leaderboard)
         return this.leaderboardEmbed(leaderboard, tracker, trackerReactions)
@@ -37,14 +38,14 @@ export default class LeaderboardEmbed implements Embed {
     public getComponents = ({
         leaderboard,
         trackers,
-        selectedTracker
+        selectedTrackerId
     }: {
         leaderboard: Leaderboard
         trackers: Tracker[]
-        selectedTracker?: string
-    }): ActionRowBuilder<AnyComponentBuilder>[] | undefined => {
-        const defaultTracker = this.getTracker(trackers, selectedTracker)
-        if (!defaultTracker) return
+        selectedTrackerId?: string
+    }): ActionRowBuilder<AnyComponentBuilder>[] => {
+        const defaultTracker = this.getTracker(trackers, selectedTrackerId)
+        if (!defaultTracker) return []
 
         const trackerOptions = trackers.map(tracker => {
             let trackerEmoji = '📊' // Chart emoji
@@ -78,14 +79,14 @@ export default class LeaderboardEmbed implements Embed {
 
     private getTracker = (
         trackers: Tracker[],
-        selectedTracker?: string
+        selectedTrackerId?: string
     ): Tracker | undefined => {
         const sortedTrackers = trackers.sort()
         let tracker: Tracker | undefined = sortedTrackers[0]
 
-        if (selectedTracker) {
+        if (selectedTrackerId) {
             tracker = sortedTrackers.find(
-                sortedTracker => sortedTracker.uuid === selectedTracker
+                sortedTracker => sortedTracker.uuid === selectedTrackerId
             )
         }
 

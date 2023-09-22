@@ -15,7 +15,6 @@ import {
     channelMention,
     inlineCode
 } from 'discord.js'
-// import { Tracker } from '../sequelize/types/tracker'
 
 export default class LeaderboardCommand implements Command {
     // Should be admin perms
@@ -78,6 +77,14 @@ export default class LeaderboardCommand implements Command {
                             'The id of the tracker to add (/leaderboard trackers to view them)'
                         )
                         .setRequired(true)
+                )
+                .addBooleanOption(option =>
+                    option
+                        .setName('is-default')
+                        .setDescription(
+                            'Should this be the default tracker for the leaderboard?'
+                        )
+                        .setRequired(false)
                 )
         )
         // Leaderboard - untrack
@@ -410,6 +417,9 @@ export default class LeaderboardCommand implements Command {
             return
         }
         const channel = await interaction.options.getChannel('channel', true)
+        const isDefault =
+            (await interaction.options.getBoolean('is-default')) ?? false
+
         const leaderboard: Leaderboard = await Leaderboard.findOne({
             where: { channelSnowflake: channel.id, guildId: guildRow.uuid }
         })
@@ -449,6 +459,17 @@ export default class LeaderboardCommand implements Command {
                     trackerId: tracker.uuid
                 }
             })
+
+        if (isDefault || leaderboard.defaultLeaderboardTrackerId === null) {
+            await Leaderboard.update(
+                { defaultLeaderboardTrackerId: leaderboardTracker.uuid },
+                {
+                    where: {
+                        uuid: leaderboard.uuid
+                    }
+                }
+            )
+        }
 
         if (!created) {
             await interaction.reply(
@@ -529,6 +550,46 @@ export default class LeaderboardCommand implements Command {
                 uuid: leaderboardTracker.uuid
             }
         })
+
+        if (
+            leaderboard.defaultLeaderboardTrackerId === leaderboardTracker.uuid
+        ) {
+            await Leaderboard.update(
+                { defaultLeaderboardTrackerId: null },
+                {
+                    where: {
+                        uuid: leaderboard.uuid
+                    }
+                }
+            )
+
+            let newDefaultTrackerId: string | null = null
+            if (
+                (await LeaderboardTrackers.count({
+                    where: {
+                        leaderboardId: leaderboard.uuid
+                    }
+                })) >= 1
+            ) {
+                // TODO: It would be nice if we could spawn an embed here to select the new default tracker
+                const newDefaultTracker = await LeaderboardTrackers.findOne({
+                    where: {
+                        leaderboardId: leaderboard.uuid
+                    },
+                    order: [['createdAt', 'ASC']]
+                })
+                newDefaultTrackerId = newDefaultTracker?.uuid ?? null
+            }
+
+            await Leaderboard.update(
+                { defaultLeaderboardTrackerId: newDefaultTrackerId },
+                {
+                    where: {
+                        uuid: leaderboard.uuid
+                    }
+                }
+            )
+        }
 
         await interaction.reply('The tracker has been removed')
         await bot.createOrUpdateLeaderboardEmbed(leaderboard.uuid)

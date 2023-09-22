@@ -10,4 +10,7 @@ export interface Leaderboard {
 
     // The channel snowflake for the leaderboard
     channelSnowflake: string
+
+    // The default tracker for the leaderboard
+    defaultLeaderboardTrackerId: string | null
 }

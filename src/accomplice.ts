@@ -697,7 +697,7 @@ export default class Accomplice extends Client {
 
     public async createOrUpdateLeaderboardEmbed(
         leaderboardId: string,
-        selectedTracker?: string,
+        selectedTrackerId?: string,
         deleteEmbed?: true
     ): Promise<void> {
         const { Leaderboard, LeaderboardTrackers, Tracker, Reaction } =
@@ -789,16 +789,33 @@ export default class Accomplice extends Client {
         }
 
         const leaderboardEmbed = new LeaderboardEmbed()
+
+        const defaultTrackerId = leaderboardTrackers.find(
+            leaderboardTracker =>
+                leaderboardTracker.uuid ===
+                leaderboard.defaultLeaderboardTrackerId
+        )?.trackerId
+
+        // The preferred tracker id is the default tracker id if it exists, otherwise the first tracker id
+        const preferredTrackerId = defaultTrackerId
+            ? defaultTrackerId
+            : leaderboardTrackers[0].trackerId
+
+        // If the caller passed a specific tracker id, use that, otherwise use the preferred tracker id
+        const updatedTrackerId = selectedTrackerId
+            ? selectedTrackerId
+            : preferredTrackerId
+
         const embed = leaderboardEmbed.getEmbed({
             leaderboard,
             trackers,
             trackerReactions,
-            selectedTracker
+            selectedTrackerId: updatedTrackerId
         })
         const components = leaderboardEmbed.getComponents({
             leaderboard,
             trackers,
-            selectedTracker
+            selectedTrackerId: updatedTrackerId
         })
 
         const messageId = leaderboard.messageSnowflake
