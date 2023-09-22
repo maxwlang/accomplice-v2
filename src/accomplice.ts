@@ -10,7 +10,6 @@ import { Op } from 'sequelize'
 import { Tracker } from './sequelize/types/tracker'
 import { User } from './sequelize/types/user'
 import { getEmojiType } from './util/emoji'
-import { isNil } from 'ramda'
 import { readdir } from 'fs/promises'
 import { token } from './config/discord'
 import { v4 as uuidv4 } from 'uuid'
@@ -37,6 +36,7 @@ import {
     ReactionType
 } from './sequelize/types/reaction'
 import { RedisClientType, createClient } from 'redis'
+import { is, isNil } from 'ramda'
 import { redisEnabled, redisPrefix, redisURL } from './config/redis'
 
 export default class Accomplice extends Client {
@@ -749,6 +749,7 @@ export default class Accomplice extends Client {
                 type: ReactionType | null
                 content?: string | null
                 emojiId?: string | null
+                isBot?: boolean
             } = {
                 guildId: tracker.guildId,
                 type: tracker.reactionType
@@ -759,6 +760,11 @@ export default class Accomplice extends Client {
             } else {
                 where.emojiId = tracker.reactionContent
             }
+
+            if (!tracker.displayBots) {
+                where.isBot = false
+            }
+
             const reactions: ReactionCount[] = await Reaction.findAll({
                 attributes: [
                     'reacteeUserId',
