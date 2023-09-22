@@ -4,9 +4,30 @@ const fs = require('fs')
 const path = require('path')
 const Sequelize = require('sequelize')
 const basename = path.basename(__filename)
-const env =
-    process.env['NODE_ENV'] === 'production' ? 'production' : 'development'
-const config = require(__dirname + '/../config/sequelize.json')[env]
+const dbenv = process.env['DB_ENV']
+// const config = require(__dirname + '/../config/sequelize.json')[env]
+const dbOpts = {
+    production: {
+        dialect: process.env['DB_PROD_DIALECT'],
+        host: process.env['DB_PROD_HOST'],
+        port: process.env['DB_PROD_PORT'],
+        username: process.env['DB_PROD_USERNAME'],
+        password: process.env['DB_PROD_PASSWORD'],
+        database: process.env['DB_PROD_DATABASE'],
+        logging: false
+    },
+    development: {
+        dialect: process.env['DB_DEV_DIALECT'],
+        host: process.env['DB_DEV_HOST'],
+        port: process.env['DB_DEV_PORT'],
+        username: process.env['DB_DEV_USERNAME'],
+        password: process.env['DB_DEV_PASSWORD'],
+        database: process.env['DB_DEV_DATABASE'],
+        logging: true
+    }
+}
+
+const config = dbOpts[dbenv]
 const db = {}
 
 const sequelize = new Sequelize(config)

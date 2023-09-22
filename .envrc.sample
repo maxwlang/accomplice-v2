@@ -1,9 +1,26 @@
 use asdf
-export DISCORD_TOKEN=your_token_here
+export LOG_LEVEL=debug
+
+export DISCORD_TOKEN="token"
 export DISCORD_DISPLAY_NAME="Accomplice V2"
 export DISCORD_ACTIVITY_REFRESH_INTERVAL=60
 export DISCORD_BOT_ADMIN_SNOWFLAKE=707022657354203180
 
+export REDIS_ENABLED=false
 export REDIS_URL=redis://localhost:6379
 export REDIS_PREFIX=accomplice_
-export LOG_LEVEL=debug
+
+export DB_ENV="development"
+export DB_PROD_DIALECT="mariadb"
+export DB_PROD_HOST="10.0.20.10"
+export DB_PROD_PORT="3306"
+export DB_PROD_USERNAME="accomplice"
+export DB_PROD_PASSWORD="accomplice"
+export DB_PROD_DATABASE="accomplice"
+
+export DB_DEV_DIALECT="mariadb"
+export DB_DEV_HOST="10.0.20.10"
+export DB_DEV_PORT="3306"
+export DB_DEV_USERNAME="accomplice_dev"
+export DB_DEV_PASSWORD="accomplice_dev"
+export DB_DEV_DATABASE="accomplice_dev"

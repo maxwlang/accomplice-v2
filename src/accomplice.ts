@@ -12,7 +12,6 @@ import { User } from './sequelize/types/user'
 import { getEmojiType } from './util/emoji'
 import { isNil } from 'ramda'
 import { readdir } from 'fs/promises'
-import { redisPrefix } from './config/redis'
 import { token } from './config/discord'
 import { v4 as uuidv4 } from 'uuid'
 
@@ -38,6 +37,7 @@ import {
     ReactionType
 } from './sequelize/types/reaction'
 import { RedisClientType, createClient } from 'redis'
+import { redisEnabled, redisPrefix, redisURL } from './config/redis'
 
 export default class Accomplice extends Client {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -51,13 +51,16 @@ export default class Accomplice extends Client {
             partials: [Partials.Message, Partials.Channel, Partials.Reaction]
         })
 
-        const redisClient = createClient({
-            url: process.env['REDIS_URL'] ?? 'redis://localhost:6379'
-        })
+        let redisClient
+        if (redisEnabled) {
+            redisClient = createClient({
+                url: redisURL ?? 'redis://localhost:6379'
+            })
 
-        redisClient.on('error', err =>
-            this.logger.error('Redis Client Error', err)
-        )
+            redisClient.on('error', err =>
+                this.logger.error('Redis Client Error', err)
+            )
+        }
 
         this.redis = redisClient
         this.logger = logger
@@ -67,7 +70,7 @@ export default class Accomplice extends Client {
     }
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    public redis: RedisClientType<any, any, any>
+    public redis?: RedisClientType<any, any, any>
     public logger: Logger
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     public sequelize: any // Stupid sequelize shit
@@ -906,15 +909,18 @@ export default class Accomplice extends Client {
     public async start(): Promise<Accomplice> {
         // Setup redis, perform quick write check
         const uniqueKey = uuidv4()
-        await this.redis.connect()
-        await this.redis.set(`${redisPrefix}${uniqueKey}_test`, 'success')
-        const redisValue: string | null = await this.redis.get(
-            `${redisPrefix}${uniqueKey}_test`
-        )
-        if (!redisValue || redisValue !== 'success') {
-            throw new Error('Redis check failed')
+
+        if (redisEnabled && this.redis) {
+            await this.redis.connect()
+            await this.redis.set(`${redisPrefix}${uniqueKey}_test`, 'success')
+            const redisValue: string | null = await this.redis.get(
+                `${redisPrefix}${uniqueKey}_test`
+            )
+            if (!redisValue || redisValue !== 'success') {
+                throw new Error('Redis check failed')
+            }
+            await this.redis.del(`${redisPrefix}${uniqueKey}_test`)
         }
-        await this.redis.del(`${redisPrefix}${uniqueKey}_test`)
 
         await this.registerEvents() // Configure event listeners
         await this.login(token)
