@@ -1,12 +1,13 @@
-import { User as DiscordUser, MessageReaction } from 'discord.js'
 import Accomplice from '../accomplice'
 import EventHandle from '../types/EventHandle'
-import { v4 as uuidv4 } from 'uuid'
-import { isEmpty } from 'ramda'
+import { Guild } from '../sequelize/types/guild'
+import { Reaction } from '../sequelize/types/reaction'
 import { User } from '../sequelize/types/user'
 import { getEmojiType } from '../util/emoji'
-import { Reaction } from '../sequelize/types/reaction'
-import { Guild } from '../sequelize/types/guild'
+import { isEmpty } from 'ramda'
+import { v4 as uuidv4 } from 'uuid'
+
+import { User as DiscordUser, MessageReaction } from 'discord.js'
 
 export default class ReactionRemoved implements EventHandle {
     public name = 'Reaction Removed'

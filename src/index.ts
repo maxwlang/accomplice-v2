@@ -1,7 +1,7 @@
-import logger from './modules/logger'
 import Accomplice from './accomplice'
 import db from './sequelize/models'
 import fs from 'fs'
+import logger from './modules/logger'
 ;(async (): Promise<void> => {
     try {
         logger.info('Loading database..')
@@ -9,7 +9,10 @@ import fs from 'fs'
 
         if (!fs.existsSync('./data')) fs.mkdirSync('./data')
 
-        if (!fs.existsSync('./data/.db-initialized')) {
+        if (
+            !fs.existsSync('./data/.db-initialized') &&
+            process.env.NODE_ENV !== 'production'
+        ) {
             await db.sequelize.sync({ force: true })
             fs.writeFileSync(
                 './data/.db-initialized',

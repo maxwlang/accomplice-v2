@@ -1,4 +1,21 @@
+import ApplicationCommandRateLimit from './embeds/ApplicationCommandRateLimit'
+import Command from './types/Command'
+import CommandsRegistered from './embeds/CommandsRegistered'
+import EventHandle from './types/EventHandle'
+import { Leaderboard } from './sequelize/types/leaderboard'
+import LeaderboardEmbed from './embeds/Leaderboard'
+import { LeaderboardTrackers } from './sequelize/types/leaderboard_trackers'
+import { Logger } from 'winston'
+import { Op } from 'sequelize'
+import { Tracker } from './sequelize/types/tracker'
+import { User } from './sequelize/types/user'
+import { getEmojiType } from './util/emoji'
+import { isNil } from 'ramda'
 import { readdir } from 'fs/promises'
+import { redisPrefix } from './config/redis'
+import { token } from './config/discord'
+import { v4 as uuidv4 } from 'uuid'
+
 import {
     ChannelType,
     ChatInputCommandInteraction,
@@ -14,30 +31,13 @@ import {
     PermissionFlagsBits,
     RESTPostAPIChatInputApplicationCommandsJSONBody
 } from 'discord.js'
-import { RedisClientType, createClient } from 'redis'
-import { Logger } from 'winston'
-import EventHandle from './types/EventHandle'
-import { Leaderboard } from './sequelize/types/leaderboard'
 import { Guild, GuildSyncState } from './sequelize/types/guild'
-import { token } from './config/discord'
-import { redisPrefix } from './config/redis'
-import { v4 as uuidv4 } from 'uuid'
-import Command from './types/Command'
-import LeaderboardEmbed from './embeds/Leaderboard'
-import ApplicationCommandRateLimit from './embeds/ApplicationCommandRateLimit'
-import CommandsRegistered from './embeds/CommandsRegistered'
-import { User } from './sequelize/types/user'
-import { getEmojiType } from './util/emoji'
-import { isNil } from 'ramda'
-import { Tracker } from './sequelize/types/tracker'
 import {
     Reaction,
     ReactionCount,
     ReactionType
 } from './sequelize/types/reaction'
-
-import { Op } from 'sequelize'
-import { LeaderboardTrackers } from './sequelize/types/leaderboard_trackers'
+import { RedisClientType, createClient } from 'redis'
 
 export default class Accomplice extends Client {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any

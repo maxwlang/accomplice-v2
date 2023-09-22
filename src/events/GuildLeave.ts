@@ -1,7 +1,7 @@
-import { Guild } from 'discord.js'
-import { Guild as GuildRow } from '../sequelize/types/guild'
 import Accomplice from '../accomplice'
 import EventHandle from '../types/EventHandle'
+import { Guild } from 'discord.js'
+import { Guild as GuildRow } from '../sequelize/types/guild'
 import { isEmpty } from 'ramda'
 
 export default class GuildLeave implements EventHandle {

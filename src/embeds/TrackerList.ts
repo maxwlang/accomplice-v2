@@ -1,9 +1,10 @@
-import { EmbedBuilder, bold, formatEmoji, inlineCode } from 'discord.js'
 import Embed from '../types/Embed'
-import { Tracker } from '../sequelize/types/tracker'
-import { isEmpty } from 'ramda'
-import { avatarDisplayName } from '../config/discord'
 import { ReactionType } from '../sequelize/types/reaction'
+import { Tracker } from '../sequelize/types/tracker'
+import { avatarDisplayName } from '../config/discord'
+import { isEmpty } from 'ramda'
+
+import { EmbedBuilder, bold, formatEmoji, inlineCode } from 'discord.js'
 
 export default class TrackerList implements Embed {
     public getEmbed({ trackers }: { trackers: Tracker[] }): EmbedBuilder {

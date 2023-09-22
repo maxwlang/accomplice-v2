@@ -1,5 +1,5 @@
-import { EmbedBuilder } from 'discord.js'
 import Embed from '../types/Embed'
+import { EmbedBuilder } from 'discord.js'
 import { avatarDisplayName } from '../config/discord'
 
 export default class CommandsRegistered implements Embed {

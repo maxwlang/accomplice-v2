@@ -1,9 +1,10 @@
+import Accomplice from '../accomplice'
+
 import {
     ChatInputCommandInteraction,
     SlashCommandBuilder,
     SlashCommandSubcommandsOnlyBuilder
 } from 'discord.js'
-import Accomplice from '../accomplice'
 
 export default interface Command {
     meta: SlashCommandBuilder | SlashCommandSubcommandsOnlyBuilder

@@ -1,6 +1,6 @@
 import Accomplice from '../accomplice'
-import { Leaderboard } from '../sequelize/types/leaderboard'
 import EventHandle from '../types/EventHandle'
+import { Leaderboard } from '../sequelize/types/leaderboard'
 
 export default class LeaderboardStartup implements EventHandle {
     public name = 'Leaderboard Startup'

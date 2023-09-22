@@ -1,7 +1,7 @@
-import { ActivityType } from 'discord.js'
 import Accomplice from '../accomplice'
-import EventHandle from '../types/EventHandle'
 import { ActivitiesOptions } from 'discord.js'
+import { ActivityType } from 'discord.js'
+import EventHandle from '../types/EventHandle'
 import { activityRefreshInterval } from '../config/discord'
 
 export default class ActivityRotation implements EventHandle {

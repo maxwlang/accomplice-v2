@@ -1,8 +1,9 @@
-import { EmbedBuilder, bold, channelMention } from 'discord.js'
 import Embed from '../types/Embed'
 import { Leaderboard } from '../sequelize/types/leaderboard'
-import { isEmpty } from 'ramda'
 import { avatarDisplayName } from '../config/discord'
+import { isEmpty } from 'ramda'
+
+import { EmbedBuilder, bold, channelMention } from 'discord.js'
 
 export default class LeaderboardList implements Embed {
     public getEmbed(leaderboards: Leaderboard[]): EmbedBuilder {

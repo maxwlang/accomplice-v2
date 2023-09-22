@@ -1,6 +1,7 @@
-import { EmbedBuilder, bold } from 'discord.js'
 import Embed from '../types/Embed'
 import { avatarDisplayName } from '../config/discord'
+
+import { EmbedBuilder, bold } from 'discord.js'
 
 export default class ApplicationCommandRateLimit implements Embed {
     public getEmbed(): EmbedBuilder {

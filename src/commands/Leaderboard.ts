@@ -1,19 +1,20 @@
+import Accomplice from '../accomplice'
+import Command from '../types/Command'
+import { Guild } from '../sequelize/types/guild'
+import { Leaderboard } from '../sequelize/types/leaderboard'
+import LeaderboardList from '../embeds/LeaderboardList'
+import { LeaderboardTrackers } from '../sequelize/types/leaderboard_trackers'
+import { Tracker } from '../sequelize/types/tracker'
+import TrackerList from '../embeds/TrackerList'
+import { isEmpty } from 'ramda'
+import { v4 as uuidv4 } from 'uuid'
+
 import {
     ChatInputCommandInteraction,
     SlashCommandBuilder,
     channelMention,
     inlineCode
 } from 'discord.js'
-import Command from '../types/Command'
-import Accomplice from '../accomplice'
-import LeaderboardList from '../embeds/LeaderboardList'
-import { Leaderboard } from '../sequelize/types/leaderboard'
-import { Guild } from '../sequelize/types/guild'
-import { Tracker } from '../sequelize/types/tracker'
-import { v4 as uuidv4 } from 'uuid'
-import { LeaderboardTrackers } from '../sequelize/types/leaderboard_trackers'
-import TrackerList from '../embeds/TrackerList'
-import { isEmpty } from 'ramda'
 // import { Tracker } from '../sequelize/types/tracker'
 
 export default class LeaderboardCommand implements Command {

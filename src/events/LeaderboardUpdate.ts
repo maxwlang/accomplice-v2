@@ -1,7 +1,7 @@
-import { isEmpty } from 'ramda'
 import Accomplice from '../accomplice'
 import EventHandle from '../types/EventHandle'
 import { StringSelectMenuInteraction } from 'discord.js'
+import { isEmpty } from 'ramda'
 
 export default class LeaderboardUpdate implements EventHandle {
     public name = 'Leaderboard Update'

@@ -1,6 +1,7 @@
-import { GuildEmoji, ReactionEmoji } from 'discord.js'
 import { ReactionType } from '../sequelize/types/reaction'
 import emojilib from 'emojilib'
+
+import { GuildEmoji, ReactionEmoji } from 'discord.js'
 
 export function getEmojiType(
     reaction: GuildEmoji | ReactionEmoji

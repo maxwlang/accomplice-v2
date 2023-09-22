@@ -1,6 +1,7 @@
-import { EmbedBuilder, bold, inlineCode } from 'discord.js'
 import Embed from '../types/Embed'
 import { avatarDisplayName } from '../config/discord'
+
+import { EmbedBuilder, bold, inlineCode } from 'discord.js'
 
 export default class Welcome implements Embed {
     public getEmbed(avatarUrl: string | undefined | null): EmbedBuilder {

@@ -1,11 +1,12 @@
+import Accomplice from '../accomplice'
+import Command from '../types/Command'
+
 import {
     ChatInputCommandInteraction,
     OAuth2Scopes,
     PermissionFlagsBits,
     SlashCommandBuilder
 } from 'discord.js'
-import Command from '../types/Command'
-import Accomplice from '../accomplice'
 
 export default class PingCommand implements Command {
     public meta = new SlashCommandBuilder()

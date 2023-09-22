@@ -1,9 +1,10 @@
-import { Guild, Message } from 'discord.js'
 import Accomplice from '../accomplice'
 import EventHandle from '../types/EventHandle'
-import { v4 as uuidv4 } from 'uuid'
-import { isEmpty } from 'ramda'
 import Welcome from '../embeds/Welcome'
+import { isEmpty } from 'ramda'
+import { v4 as uuidv4 } from 'uuid'
+
+import { Guild, Message } from 'discord.js'
 
 export default class GuildJoin implements EventHandle {
     public name = 'Guild Joined'
