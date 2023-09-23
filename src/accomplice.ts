@@ -6,10 +6,10 @@ import { Leaderboard } from './sequelize/types/leaderboard'
 import LeaderboardEmbed from './embeds/Leaderboard'
 import { LeaderboardTrackers } from './sequelize/types/leaderboard_trackers'
 import { Logger } from 'winston'
-import { Op } from 'sequelize'
 import { Tracker } from './sequelize/types/tracker'
 import { User } from './sequelize/types/user'
 import { getEmojiType } from './util/emoji'
+import { isNil } from 'ramda'
 import { readdir } from 'fs/promises'
 import { token } from './config/discord'
 import { v4 as uuidv4 } from 'uuid'
@@ -30,13 +30,13 @@ import {
     RESTPostAPIChatInputApplicationCommandsJSONBody
 } from 'discord.js'
 import { Guild, GuildSyncState } from './sequelize/types/guild'
+import { Op, QueryTypes } from 'sequelize'
 import {
     Reaction,
     ReactionCount,
     ReactionType
 } from './sequelize/types/reaction'
 import { RedisClientType, createClient } from 'redis'
-import { is, isNil } from 'ramda'
 import { redisEnabled, redisPrefix, redisURL } from './config/redis'
 
 export default class Accomplice extends Client {
@@ -700,7 +700,7 @@ export default class Accomplice extends Client {
         selectedTrackerId?: string,
         deleteEmbed?: true
     ): Promise<void> {
-        const { Leaderboard, LeaderboardTrackers, Tracker, Reaction } =
+        const { Leaderboard, LeaderboardTrackers, Tracker } =
             this.sequelize.models
         this.logger.debug(`Create or update leaderboard ${leaderboardId}`)
 
@@ -744,52 +744,74 @@ export default class Accomplice extends Client {
 
         const trackerReactions: Map<string, ReactionCount[]> = new Map()
         for (const tracker of trackers) {
-            const where: {
-                guildId: string
-                type: ReactionType | null
-                content?: string | null
-                emojiId?: string | null
-                isBot?: boolean
-            } = {
-                guildId: tracker.guildId,
-                type: tracker.reactionType
-            }
+            // SELECT
+            //     `ReacteeUser`.`snowflake` as `reacteeUserSnowflake`,
+            //     COUNT(`reacteeUserId`) AS `amount`
+            // FROM
+            //     `Reactions` as `Reaction`
+            //     LEFT JOIN `Users` as `ReacteeUser` ON `ReacteeUser`.`uuid` = `Reaction`.`reacteeUserId`
+            //     LEFT JOIN `Users` as `ReactorUser` ON `ReactorUser`.`uuid` = `Reaction`.`reactorUserId`
+            // WHERE
+            //     `ReacteeUser`.`isBot` = false
+            //     AND `ReactorUser`.`isBot` = false
+            //     AND `Reaction`.`guildId` = 'f2bcadfd-0a4e-4f3a-a895-ecc9fb62e38a'
+            //     AND `Reaction`.`type` = 'emoji'
+            //     AND `Reaction`.`reacteeUserId` = `Reaction`.`reactorUserId`
+            //     AND `Reaction`.`content` = '💀'
+            // GROUP BY
+            //     `Reaction`.`reacteeUserId`
+            // ORDER BY
+            //     `amount` DESC
+            // LIMIT
+            //     9;
 
-            if (tracker.reactionType === ReactionType.Emoji) {
-                where.content = tracker.reactionContent
-            } else {
-                where.emojiId = tracker.reactionContent
-            }
-
-            if (!tracker.displayBots) {
-                where.isBot = false
-            }
-
-            const reactions: ReactionCount[] = await Reaction.findAll({
-                attributes: [
-                    'reacteeUserId',
-                    // Note the wrapping parentheses in the call below!
-                    [
-                        this.sequelize.literal(`(
-                    SELECT snowflake
-                    FROM Users AS user
-                    WHERE user.uuid = Reaction.reacteeUserId
-                )`),
-                        'reacteeUserSnowflake'
-                    ],
-                    [
-                        this.sequelize.fn(
-                            'COUNT',
-                            this.sequelize.col('reacteeUserId')
-                        ),
-                        'amount'
-                    ]
-                ],
-                group: 'reacteeUserId',
-                where,
-                limit: tracker.length,
-                order: [['amount', 'DESC']]
-            })
+            const reactions: ReactionCount[] = await this.sequelize.query(
+                `SELECT
+                        \`ReacteeUser\`.\`snowflake\` as \`reacteeUserSnowflake\`,
+                        COUNT(\`reacteeUserId\`) AS \`amount\`
+                    FROM
+                        \`Reactions\` as \`Reaction\`
+                        LEFT JOIN \`Users\` as \`ReacteeUser\` ON \`ReacteeUser\`.\`uuid\` = \`Reaction\`.\`reacteeUserId\`
+                        LEFT JOIN \`Users\` as \`ReactorUser\` ON \`ReactorUser\`.\`uuid\` = \`Reaction\`.\`reactorUserId\`
+                    WHERE
+                        \`Reaction\`.\`guildId\` = :guildId
+                        AND \`Reaction\`.\`type\` = :type
+                        ${
+                            !tracker.displayBots
+                                ? `AND \`ReacteeUser\`.\`isBot\` = false`
+                                : ''
+                        }
+                        ${
+                            !tracker.recognizeSelfReactions
+                                ? `AND \`Reaction\`.\`reacteeUserId\` != \`Reaction\`.\`reactorUserId\``
+                                : ''
+                        }
+                        ${
+                            !tracker.recognizeBotReactions
+                                ? `AND \`ReactorUser\`.\`isBot\` = false`
+                                : ''
+                        }
+                        ${
+                            tracker.reactionType === ReactionType.Emoji
+                                ? `AND \`Reaction\`.\`content\` = :content`
+                                : `AND \`Reaction\`.\`emojiId\` = :content`
+                        }
+                    GROUP BY
+                        \`Reaction\`.\`reacteeUserId\`
+                    ORDER BY
+                        \`amount\` DESC
+                    LIMIT
+                        :limit;`,
+                {
+                    replacements: {
+                        guildId: tracker.guildId,
+                        type: tracker.reactionType,
+                        content: tracker.reactionContent,
+                        limit: tracker.length
+                    },
+                    type: QueryTypes.SELECT
+                }
+            )
 
             trackerReactions.set(tracker.uuid, reactions)
         }
@@ -805,7 +827,7 @@ export default class Accomplice extends Client {
         // The preferred tracker id is the default tracker id if it exists, otherwise the first tracker id
         const preferredTrackerId = defaultTrackerId
             ? defaultTrackerId
-            : leaderboardTrackers[0].trackerId
+            : leaderboardTrackers[0]?.trackerId
 
         // If the caller passed a specific tracker id, use that, otherwise use the preferred tracker id
         const updatedTrackerId = selectedTrackerId

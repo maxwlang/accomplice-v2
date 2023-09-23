@@ -281,7 +281,8 @@ export default class LeaderboardCommand implements Command {
             return
         }
 
-        const { Guild, LeaderboardTrackers, Tracker } = bot.sequelize.models
+        const { Guild, LeaderboardTrackers, Tracker, Leaderboard } =
+            bot.sequelize.models
         const guildRow: Guild | null = await Guild.findOne({
             where: { snowflake: interaction.guildId }
         })
@@ -336,6 +337,13 @@ export default class LeaderboardCommand implements Command {
 
         // Update any embeds to reflect new changes
         for (const leaderboardTrackerLink of leaderboardTrackerLinks) {
+            await Leaderboard.update({
+                defaultLeaderboardTrackerId: null,
+                where: {
+                    defaultLeaderboardTrackerId: leaderboardTrackerLink.uuid
+                }
+            })
+
             await bot.createOrUpdateLeaderboardEmbed(
                 leaderboardTrackerLink.leaderboardId
             )

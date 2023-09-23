@@ -172,8 +172,8 @@ export default class LeaderboardEmbed implements Embed {
             embed.addFields({
                 name: `${this.nth(i)}.`,
                 value: `${userMention(
-                    reaction.dataValues.reacteeUserSnowflake
-                )}\n${displayEmoji} - ${reaction.dataValues.amount}`,
+                    reaction.reacteeUserSnowflake
+                )}\n${displayEmoji} - ${reaction.amount}`,
                 inline: true
             })
             i++
