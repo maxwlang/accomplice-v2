@@ -21,13 +21,12 @@ Discord Leaderboards and Starboards done right
       - [x] ignore bot reactions
       - [?] ignore missing users
         - not sure how to do this, maybe remove users from the database if they are not found?
-    - [x] leaderboard default tracker option
-      - [ ] allow editing default tracker without removing and re-adding
-    - [?] leaderboard option for switching embed to stats for most recent embed
-    - [ ] leaderboard reset to default tracker option
+      - [x] default tracker option
+        - [ ] allow editing default tracker without removing and re-adding
+      - [ ] option to show person with most reacts of a certain type on a message
+      - [ ] leaderboard erase messages in channel option
+      - [ ] reset to default tracker option
 - Store sync state for guild channels on guild table [{channelSnowflake: 12345, latestMessageSnowflake: 12345}], allows recovering missed messages when offline
-- Fix issue where gif emotes are registered as non-gif custom emotes
-- For required command options, set second arg to true on interaction.options.get<whatever>(..., true)
 - Build out more embeds
 - Start starboard
 - Priority Guilds
@@ -36,6 +35,9 @@ Discord Leaderboards and Starboards done right
 - Support re-syncing single channel with /leaderboard synchronize
 - Use redis where it makes sense
 - On start look for left servers
+
+## Known issues
+  - Fix issue where gif emotes are registered as non-gif custom emotes
 
 ## Commands (Complete)
 - /tracker - Trackers are used to track reaction events.
