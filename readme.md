@@ -1,43 +1,8 @@
 # Accomplice V2
 Discord Leaderboards and Starboards done right
 
-## TODO In priority order
-- Finish leaderboard
-    - [x] commands
-    - [x] build leaderboard createorupdate function
-    - [x] restore leaderboard on startup
-    - [x] Trigger leaderboard createorupdate on reaction add, reaction remove
-    - [x] Trigger leaderboard createorupdate on leaderboard tracker add, leaderboard tracker remove
-    - [x] Dynamically populate leaderboard
-        - [x] Update leaderboard createorupdate function
-        - [x] Start templating out components
-        - [x] Figure out why embed updates are not working. request is not erroring
-        - [x] Generate leaderboard content
-    - [x] Add leaderboard embed components
-    - [x] Handle leaderboard embed component events
-    - [~] leaderboard options
-      - [x] ignore bots
-      - [x] ignore self reactions
-      - [x] ignore bot reactions
-      - [?] ignore missing users
-        - not sure how to do this, maybe remove users from the database if they are not found?
-      - [x] default tracker option
-        - [ ] allow editing default tracker without removing and re-adding
-      - [ ] option to show person with most reacts of a certain type on a message
-      - [ ] leaderboard erase messages in channel option
-      - [ ] reset to default tracker option
-- Store sync state for guild channels on guild table [{channelSnowflake: 12345, latestMessageSnowflake: 12345}], allows recovering missed messages when offline
-- Build out more embeds
-- Start starboard
-- Priority Guilds
-- Rework logs to be consistent in log level, formatting, and language
-- Support re-syncing specific channels that failed during initial sync instead of whole guild
-- Support re-syncing single channel with /leaderboard synchronize
-- Use redis where it makes sense
-- On start look for left servers
-
-## Known issues
-  - Fix issue where gif emotes are registered as non-gif custom emotes
+## TODO & Issues
+https://trello.com/b/3e2lA442/accomplice-v2
 
 ## Commands (Complete)
 - /tracker - Trackers are used to track reaction events.
