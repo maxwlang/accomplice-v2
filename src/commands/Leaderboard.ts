@@ -34,6 +34,14 @@ export default class LeaderboardCommand implements Command {
                         )
                         .setRequired(true)
                 )
+                .addBooleanOption(option =>
+                    option
+                        .setName('delete-user-messages')
+                        .setDescription(
+                            'Should Accomplice delete user messages in the channel? (default: true)'
+                        )
+                        .setRequired(false)
+                )
         )
         // Leaderboard - destroy
         .addSubcommand(subCommand =>
@@ -196,6 +204,8 @@ export default class LeaderboardCommand implements Command {
         const guildRow: Guild | null = await Guild.findOne({
             where: { snowflake: interaction.guildId }
         })
+        const deleteUserMessages =
+            interaction.options.getBoolean('delete-user-messages') ?? true
 
         if (!guildRow || guildRow === null) {
             bot.logger.error('Failed to locate guild in database')
@@ -220,7 +230,8 @@ export default class LeaderboardCommand implements Command {
             await Leaderboard.findOrCreate({
                 where: {
                     guildId: guildRow.uuid,
-                    channelSnowflake: channel.id
+                    channelSnowflake: channel.id,
+                    deleteUserMessages
                 },
                 defaults: {
                     uuid: uuidv4(),

@@ -20,6 +20,11 @@ module.exports = (sequelize, DataTypes) => {
                 unique: true,
                 allowNull: false
             }, // There may only be one leaderboard per channel, but there may be multiple trackers
+            deleteUserMessages: {
+                type: DataTypes.BOOLEAN,
+                allowNull: false,
+                defaultValue: true
+            },
             messageSnowflake: {
                 type: DataTypes.STRING,
                 unique: true,

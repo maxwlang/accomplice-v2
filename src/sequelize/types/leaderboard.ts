@@ -11,6 +11,9 @@ export interface Leaderboard {
     // The channel snowflake for the leaderboard
     channelSnowflake: string
 
+    // Determines if Accomplice should delete messages in the leaderboard's channel
+    deleteUserMessages: boolean
+
     // The default tracker for the leaderboard
     defaultLeaderboardTrackerId: string | null
 }
