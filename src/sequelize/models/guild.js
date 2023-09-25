@@ -29,6 +29,11 @@ module.exports = (sequelize, DataTypes) => {
                 allowNull: false,
                 defaultValue: []
             },
+            channelsState: {
+                type: DataTypes.JSON,
+                allowNull: false,
+                defaultValue: []
+            },
             syncState: {
                 type: DataTypes.STRING,
                 allowNull: false,

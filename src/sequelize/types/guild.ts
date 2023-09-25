@@ -15,6 +15,17 @@ export interface Guild {
     // A json object representing the guild's command state
     commandsState: [{ [k: string]: unknown }]
 
+    // A json object representing the guild's command sync state
+    channelsState: [{ [k: string]: unknown }]
+    // [
+    //     {
+    //         [k: string]: {
+    //             channelSnowflake: string
+    //             latestMessageSnowflake: string
+    //         }
+    //     }
+    // ]
+
     // If the guild should be prioritized over other guilds
     isPriority: boolean
 
