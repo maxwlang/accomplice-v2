@@ -17,7 +17,6 @@ export default class LeaderboardUpdate implements EventHandle {
         bot: Accomplice
     }): Promise<void> => {
         if (!args || isEmpty(args)) return
-        bot.logger.info(`${this.trigger} fired`)
         const interaction = args[0] as StringSelectMenuInteraction
         const customId = interaction.customId
         if (!customId || customId.split(':')[0] !== 'leaderboardSelect') return

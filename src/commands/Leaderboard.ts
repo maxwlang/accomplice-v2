@@ -42,6 +42,16 @@ export default class LeaderboardCommand implements Command {
                         )
                         .setRequired(false)
                 )
+                .addIntegerOption(option =>
+                    option
+                        .setName('default-tracker-timeout')
+                        .setDescription(
+                            'The default tracker timeout in seconds (default: 120)'
+                        )
+                        .setRequired(false)
+                        .setMinValue(120)
+                        .setMaxValue(1800)
+                )
         )
         // Leaderboard - destroy
         .addSubcommand(subCommand =>
@@ -226,12 +236,16 @@ export default class LeaderboardCommand implements Command {
             return
         }
 
+        const defaultTrackerTimeout =
+            interaction.options.getInteger('default-tracker-timeout') ?? 120
+
         const [leaderboard, created]: [Leaderboard, boolean] =
             await Leaderboard.findOrCreate({
                 where: {
                     guildId: guildRow.uuid,
                     channelSnowflake: channel.id,
-                    deleteUserMessages
+                    deleteUserMessages,
+                    defaultTrackerTimeout
                 },
                 defaults: {
                     uuid: uuidv4(),

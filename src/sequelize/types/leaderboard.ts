@@ -14,6 +14,9 @@ export interface Leaderboard {
     // Determines if Accomplice should delete messages in the leaderboard's channel
     deleteUserMessages: boolean
 
+    // How long in seconds before the embed is set back to the default tracker. Minimum 120 seconds.
+    defaultTrackerTimeout: number
+
     // The default tracker for the leaderboard
     defaultLeaderboardTrackerId: string | null
 }

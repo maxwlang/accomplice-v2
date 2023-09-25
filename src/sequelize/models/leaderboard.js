@@ -25,6 +25,11 @@ module.exports = (sequelize, DataTypes) => {
                 allowNull: false,
                 defaultValue: true
             },
+            defaultTrackerTimeout: {
+                type: DataTypes.INTEGER,
+                allowNull: false,
+                defaultValue: 120
+            },
             messageSnowflake: {
                 type: DataTypes.STRING,
                 unique: true,
