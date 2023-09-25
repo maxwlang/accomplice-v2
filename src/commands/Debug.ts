@@ -62,6 +62,11 @@ export default class DebugCommand implements Command {
                         .setRequired(true)
                 )
         )
+        .addSubcommand(subcommand =>
+            subcommand
+                .setName('show-stats')
+                .setDescription('Shows stats about the bot')
+        )
     // .addSubcommand(subcommand =>
     //     subcommand
     //         .setName('list-embeds')
@@ -115,6 +120,10 @@ export default class DebugCommand implements Command {
             // case 'show-embed':
             //     await this.showEmbed(bot, interaction)
             //     break
+
+            case 'show-stats':
+                await this.showStats(bot, interaction)
+                break
 
             default:
                 await interaction.reply('Unhandled subcommand supplied.')
@@ -267,4 +276,28 @@ export default class DebugCommand implements Command {
     //         await interaction.reply(`No embed found with name ${embedName}.`)
     //     }
     // }
+
+    public showStats = async (
+        bot: Accomplice,
+        interaction: ChatInputCommandInteraction
+    ): Promise<void> => {
+        const { Starboard, Leaderboard, User, Reaction } = bot.sequelize.models
+        const guildCount = bot.guilds.cache.size
+        const channelCount = bot.channels.cache.size
+        const userCount = bot.users.cache.size
+        const starboardCount = await Starboard.count()
+        const leaderboardCount = await Leaderboard.count()
+        const reactingUserCount = await User.count()
+        const reactionCount = await Reaction.count()
+
+        let statsMessage = `${bold('Guilds:')} ${guildCount}\n`
+        statsMessage += `${bold('Channels:')} ${channelCount}\n`
+        statsMessage += `${bold('Users:')} ${userCount}\n`
+        statsMessage += `${bold('Starboards:')} ${starboardCount}\n`
+        statsMessage += `${bold('Leaderboards:')} ${leaderboardCount}\n`
+        statsMessage += `${bold('Reacting Users:')} ${reactingUserCount}\n`
+        statsMessage += `${bold('Reactions:')} ${reactionCount}`
+
+        await interaction.reply(statsMessage)
+    }
 }
