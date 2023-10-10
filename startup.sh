@@ -11,6 +11,7 @@ if test -f "$FILE"; then
 else
     echo "Initializing.."
     yarn
+    yarn build
     touch $FILE
     echo "Done. Startning up.."
     until yarn start; do
