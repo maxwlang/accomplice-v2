@@ -8,6 +8,7 @@ export DISCORD_BOT_ADMIN_SNOWFLAKE=707022657354203180
 
 export REDIS_ENABLED=false
 export REDIS_URL=redis://localhost:6379
+export REDIS_PASSWORD=redis
 export REDIS_PREFIX=accomplice_
 
 export DB_ENV="development"
