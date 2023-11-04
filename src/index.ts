@@ -10,8 +10,7 @@ import logger from './modules/logger'
         if (!fs.existsSync('./data')) fs.mkdirSync('./data')
 
         if (
-            !fs.existsSync('./data/.db-initialized') &&
-            process.env.NODE_ENV !== 'production'
+            process.env['INIT_DB'] === 'true'
         ) {
             await db.sequelize.sync({ force: true })
             fs.writeFileSync(
