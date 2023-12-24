@@ -23,6 +23,9 @@
     "test": "true",
     "migrate": "sequelize-cli db:migrate --env production --config ./src/sequelize/config/sequelize.json --seeders-path ./src/sequelize/seeders --models-path ./src/sequelize/models --migrations-path ./src/sequelize/migrations"
   },
+  "engines": {
+    "node": ">=20.10.0"
+  },
   "devDependencies": {
     "@types/node": "^18.15.11",
     "@types/ramda": "^0.29.2",
