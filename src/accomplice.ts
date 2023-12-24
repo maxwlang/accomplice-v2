@@ -81,7 +81,7 @@ export default class Accomplice extends Client {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     public sequelize: any // Stupid sequelize shit
     public commands: Map<string, Command>
-    public timers: Map<string, NodeJS.Timer>
+    public timers: Map<string, NodeJS.Timeout>
 
     private async registerEvents(): Promise<void> {
         await readdir('./dist/events')
