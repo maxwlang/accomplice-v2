@@ -52,6 +52,8 @@ export default class LeaderboardDefaultTrackerTimeout implements EventHandle {
             const timer = bot.timers.get(timerName)
             if (timer) {
                 bot.logger.debug('Clearing existing timer')
+                // TODO: fix
+                // @ts-expect-error - Not typed correctly?
                 clearTimeout(timer)
                 bot.timers.delete(timerName)
 

@@ -1,4 +1,5 @@
 import Accomplice from './accomplice'
+// @ts-expect-error - No types for sequelize
 import db from './sequelize/models'
 import fs from 'fs'
 import logger from './modules/logger'

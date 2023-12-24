@@ -160,6 +160,8 @@ export default class DebugCommand implements Command {
             return
         }
 
+        // TODO: fix
+        // @ts-expect-error - Not typed correctly?
         clearTimeout(timer)
         bot.timers.delete(timerName)
 

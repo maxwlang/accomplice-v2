@@ -42,6 +42,8 @@ export default class GuildLeave implements EventHandle {
         // Stop and remove any guild timers
         bot.timers.forEach((timer, key) => {
             if (key.startsWith(`${guild.id}_`)) {
+                // TODO: fix
+                // @ts-expect-error - Not typed correctly?
                 clearInterval(timer)
                 bot.timers.delete(key)
             }
