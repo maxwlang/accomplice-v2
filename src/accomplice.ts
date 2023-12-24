@@ -37,7 +37,12 @@ import {
     ReactionType
 } from './sequelize/types/reaction'
 import { RedisClientType, createClient } from 'redis'
-import { redisEnabled, redisPrefix, redisURL, redisPassword } from './config/redis'
+import {
+    redisEnabled,
+    redisPassword,
+    redisPrefix,
+    redisURL
+} from './config/redis'
 
 export default class Accomplice extends Client {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
