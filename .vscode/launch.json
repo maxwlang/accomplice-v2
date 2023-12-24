@@ -15,7 +15,7 @@
             "env": {
                 "LOG_LEVEL": "DEBUG"
             },
-            "preLaunchTask": "tsc: build - tsconfig.json",
+            "preLaunchTask": "tsc: build - tsconfig.build.json",
             "outFiles": [
                 "${workspaceFolder}/dist/**/*.js"
             ],
