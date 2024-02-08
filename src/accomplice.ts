@@ -500,7 +500,7 @@ export default class Accomplice extends Client {
             const channelTaskChunks = []
             const taskChunkSize = 3 // How many channels to process at once
             let chunkProgress = 0 // How many chunks have been processed
-            const messageLimit = 10_000 // How far back we will go in each channel
+            const messageLimit = 50_000 // How far back we will go in each channel
 
             while (channels.length > 0) {
                 channelTaskChunks.push(channels.splice(0, taskChunkSize))
