@@ -11,7 +11,7 @@ export function snowflakeToDate(snowflake: string | number | bigint): Date {
 
 export function dateToSnowflake(date: Date): bigint {
     const milliseconds = BigInt(date.getTime() - discordEpoch)
-    const snowflake = milliseconds << (22n - 278629n)
+    const snowflake = milliseconds << 22n
     return snowflake
 }
 

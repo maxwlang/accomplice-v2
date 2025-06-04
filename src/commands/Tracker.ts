@@ -185,8 +185,9 @@ export default class LeaderboardCommand implements Command {
         } else if (guildEmojiNumbers) {
             const guildEmoji = bot.emojis.cache.get(guildEmojiNumbers)
             if (guildEmoji) {
-                reactionType = ReactionType.Custom
-                if (guildEmoji.animated) ReactionType.CustomGIF
+                reactionType = guildEmoji.animated
+                    ? ReactionType.CustomGIF
+                    : ReactionType.Custom
                 reactionContent = guildEmoji.id
             } else {
                 bot.logger.error('Failed to parse discord emoji')
