@@ -901,32 +901,18 @@ export default class Accomplice extends Client {
         guildId: string
     ): Promise<string[]> {
         const { Tracker, LeaderboardTrackers } = this.sequelize.models
+        const reactionContent =
+            reaction.type === ReactionType.Emoji
+                ? reaction.content
+                : reaction.emojiId
+
         const trackers: Pick<Tracker, 'uuid'>[] = await Tracker.findAll({
             attributes: ['uuid'],
             group: ['uuid'],
             where: {
-                [Op.and]: [
-                    {
-                        [Op.or]: [
-                            {
-                                reactionType: reaction.type
-                            },
-                            {
-                                reactionContent: reaction.content
-                            }
-                            // TODO:
-                            // {
-                            //     reacteeUserId: reaction.reacteeUserId
-                            // },
-                            // {
-                            //     reactorUserId: reaction.reactorUserId
-                            // }
-                        ]
-                    },
-                    {
-                        guildId
-                    }
-                ]
+                guildId,
+                reactionType: reaction.type,
+                reactionContent
             }
         })
 
