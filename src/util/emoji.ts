@@ -6,9 +6,9 @@ import { GuildEmoji, ReactionEmoji } from 'discord.js'
 export function getEmojiType(
     reaction: GuildEmoji | ReactionEmoji
 ): ReactionType | undefined {
-    if (reaction.id) return ReactionType.Custom
-    if (reaction.id && reaction.animated) return ReactionType.CustomGIF
     if (reaction.id === null) return ReactionType.Emoji
+    if (reaction.animated) return ReactionType.CustomGIF
+    if (reaction.id) return ReactionType.Custom
 }
 
 export const hasEmoji = (emoji: string): boolean =>
