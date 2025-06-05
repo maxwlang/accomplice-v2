@@ -1,7 +1,7 @@
 import Accomplice from '../accomplice'
 import Command from '../types/Command'
-// import Embed from '../types/Embed'
-// import { basename } from 'path'
+import Embed from '../types/Embed'
+import { basename } from 'path'
 import { botAdminUserSnowflake } from '../config/discord'
 
 import {
@@ -12,7 +12,7 @@ import {
 } from 'discord.js'
 import SimpleEmbed from '../embeds/SimpleEmbed'
 
-// import { readdir } from 'fs/promises'
+import { readdir } from 'fs/promises'
 
 export default class DebugCommand implements Command {
     public meta = new SlashCommandBuilder()
@@ -68,22 +68,36 @@ export default class DebugCommand implements Command {
                 .setName('show-stats')
                 .setDescription('Shows stats about the bot')
         )
-    // .addSubcommand(subcommand =>
-    //     subcommand
-    //         .setName('list-embeds')
-    //         .setDescription('Lists all embeds by name')
-    // )
-    // .addSubcommand(subcommand =>
-    //     subcommand
-    //         .setName('show-embed')
-    //         .setDescription('Shows an embed')
-    //         .addStringOption(option =>
-    //             option
-    //                 .setName('embed-name')
-    //                 .setDescription('The name of the embed to show')
-    //                 .setRequired(true)
-    //         )
-    // )
+        .addSubcommand(subcommand =>
+            subcommand
+                .setName('list-embeds')
+                .setDescription('Lists all embeds by name')
+        )
+        .addSubcommand(subcommand =>
+            subcommand
+                .setName('show-embed')
+                .setDescription('Shows an embed')
+                .addStringOption(option =>
+                    option
+                        .setName('embed-name')
+                        .setDescription('The name of the embed to show')
+                        .setRequired(true)
+                )
+                .addStringOption(option =>
+                    option
+                        .setName('constructor-args')
+                        .setDescription(
+                            'JSON encoded arguments to pass to the constructor'
+                        )
+                )
+                .addStringOption(option =>
+                    option
+                        .setName('embed-args')
+                        .setDescription(
+                            'JSON encoded argument to pass to getEmbed()'
+                        )
+                )
+        )
 
     public execute = async ({
         bot,
@@ -121,13 +135,13 @@ export default class DebugCommand implements Command {
                 await this.evalSql(bot, interaction)
                 break
 
-            // case 'list-embeds':
-            //     await this.listEmbeds(bot, interaction)
-            //     break
+            case 'list-embeds':
+                await this.listEmbeds(bot, interaction)
+                break
 
-            // case 'show-embed':
-            //     await this.showEmbed(bot, interaction)
-            //     break
+            case 'show-embed':
+                await this.showEmbed(bot, interaction)
+                break
 
             case 'show-stats':
                 await this.showStats(bot, interaction)
@@ -287,52 +301,91 @@ export default class DebugCommand implements Command {
             })
     }
 
-    // public listEmbeds = async (
-    //     _bot: Accomplice,
-    //     interaction: ChatInputCommandInteraction
-    // ): Promise<void> => {
-    //     const embedFiles = await readdir('./dist/src/embeds').then(
-    //         (files: string[]) => files.filter(file => file.endsWith('.js'))
-    //     )
+    public listEmbeds = async (
+        _bot: Accomplice,
+        interaction: ChatInputCommandInteraction
+    ): Promise<void> => {
+        const embedFiles = await readdir('./dist/src/embeds').then(
+            (files: string[]) => files.filter(file => file.endsWith('.js'))
+        )
 
-    //     const embeds = await embedFiles.map(async embedFile => {
-    //         const EmbedClass = (await import(`./dist/src/embeds/${embedFile}`))
-    //             .default
-    //         const embedInstance: Embed = new EmbedClass()
-    //         const embed = await embedInstance.getEmbed()
-    //         return `- ${embedFile.split('.')[0]} - ${
-    //             embed.data.title ?? 'No Title'
-    //         } - ${embed.data.description ?? 'No Description'}`
-    //     })
+        const embeds = await Promise.all(
+            embedFiles.map(async embedFile => {
+                try {
+                    const EmbedClass = (
+                        await import(`./dist/src/embeds/${embedFile}`)
+                    ).default
+                    const embedInstance: Embed = new EmbedClass()
+                    const embed = await embedInstance.getEmbed()
+                    return `- ${embedFile.split('.')[0]} - ${
+                        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                        (embed as any).data.title ?? 'No Title'
+                    } - ${
+                        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                        (embed as any).data.description ?? 'No Description'
+                    }`
+                } catch {
+                    return `- ${embedFile.split('.')[0]} - <requires args>`
+                }
+            })
+        )
 
-    //     if (embeds.length === 0) {
-    //         await interaction.reply('No embeds found.')
-    //         return
-    //     }
+        if (embeds.length === 0) {
+            await interaction.reply('No embeds found.')
+            return
+        }
 
-    //     const embedList = embeds.join('\n')
+        const embedList = embeds.join('\n')
 
-    //     await interaction.reply(`${bold('Embeds:')}\n${codeBlock(embedList)}`)
-    // }
+        await interaction.reply(`${bold('Embeds:')}\n${codeBlock(embedList)}`)
+    }
 
-    // public showEmbed = async (
-    //     _bot: Accomplice,
-    //     interaction: ChatInputCommandInteraction
-    // ): Promise<void> => {
-    //     const embedName = basename(
-    //         interaction.options.getString('embed-name', true)
-    //     )
+    public showEmbed = async (
+        _bot: Accomplice,
+        interaction: ChatInputCommandInteraction
+    ): Promise<void> => {
+        const embedName = basename(
+            interaction.options.getString('embed-name', true)
+        )
+        const constructorArgsRaw = interaction.options.getString('constructor-args')
+        const embedArgsRaw = interaction.options.getString('embed-args')
 
-    //     try {
-    //         const EmbedClass = (await import(`./dist/src/embeds/${embedName}.js`))
-    //             .default
-    //         const embedInstance: Embed = new EmbedClass()
-    //         const embed = await embedInstance.getEmbed()
-    //         await interaction.reply({ embeds: [embed] })
-    //     } catch (e) {
-    //         await interaction.reply(`No embed found with name ${embedName}.`)
-    //     }
-    // }
+        let constructorArgs: unknown | unknown[]
+        if (constructorArgsRaw) {
+            try {
+                constructorArgs = JSON.parse(constructorArgsRaw)
+            } catch (e) {
+                await interaction.reply('Failed to parse constructor-args JSON')
+                return
+            }
+        }
+
+        let embedArgs: unknown
+        if (embedArgsRaw) {
+            try {
+                embedArgs = JSON.parse(embedArgsRaw)
+            } catch (e) {
+                await interaction.reply('Failed to parse embed-args JSON')
+                return
+            }
+        }
+
+        try {
+            const EmbedClass = (
+                await import(`./dist/src/embeds/${embedName}.js`)
+            ).default
+            // If constructorArgs is an array, spread it, otherwise pass as single arg
+            const embedInstance: Embed = Array.isArray(constructorArgs)
+                ? new EmbedClass(...constructorArgs)
+                : constructorArgsRaw
+                ? new EmbedClass(constructorArgs)
+                : new EmbedClass()
+            const embed = await embedInstance.getEmbed(embedArgs)
+            await interaction.reply({ embeds: [embed] })
+        } catch (e) {
+            await interaction.reply(`No embed found with name ${embedName}.`)
+        }
+    }
 
     public showStats = async (
         bot: Accomplice,
