@@ -154,7 +154,12 @@ export default class LeaderboardCommand implements Command {
             subCommand
                 .setName('synchronize')
                 .setDescription(
-                    'Re-synchronizes all message history for the guild'
+                    'Re-synchronizes message history for a specific channel or the entire guild'
+                )
+                .addChannelOption(option =>
+                    option
+                        .setName('channel')
+                        .setDescription('Channel to synchronize')
                 )
                 .addBooleanOption(option =>
                     option
@@ -657,11 +662,34 @@ export default class LeaderboardCommand implements Command {
         bot: Accomplice,
         interaction: ChatInputCommandInteraction
     ): Promise<void> {
-        if (!interaction.guildId || interaction.guildId === null) {
+        if (!interaction.guildId) {
             bot.logger.error('Could not find guild id during leaderboard sync')
             await interaction.reply(
                 'An error has occured, please try again later'
             )
+            return
+        }
+
+        const channel = interaction.options.getChannel('channel')
+
+        if (channel) {
+            if (!channel.isTextBased()) {
+                await interaction.reply('Please provide a valid text channel')
+                return
+            }
+
+            await interaction.reply(
+                `Started leaderboard synchronization for ${channel}`
+            )
+
+            await bot.synchronizeChannel(channel, interaction)
+            return
+        }
+
+        const confirm = interaction.options.getBoolean('confirm') ?? false
+
+        if (!confirm) {
+            await interaction.reply('Confirmation required to resync entire guild')
             return
         }
 

@@ -27,7 +27,7 @@ https://trello.com/b/3e2lA442/accomplice-v2
 
 ## Commands (Incomplete)
 - /leaderboard
-    - synchronize <confirm> (channel?) - (guild admin) Removes all indexed message states for the guild and re-gathers it. Useful if data is incorrect.
+    - synchronize (channel?, confirm?) - (guild admin) Re-synchronizes message history for the guild or a specific channel.
 - /priority - Configures guild priority. High priority guilds are serviced first under load.
     - set - Sets a guild as priority.
     - remove - Removes a guild from priority.
