@@ -6,6 +6,9 @@ describe('Ping command', () => {
         const interaction = { reply } as any
         const cmd = new PingCommand()
         await cmd.execute({ interaction })
-        expect(reply).toHaveBeenCalledWith('Pong!')
+        const response = reply.mock.calls[0][0]
+        expect(response.embeds).toHaveLength(1)
+        const embed = response.embeds[0]
+        expect(embed.data.description).toBe('Pong!')
     })
 })

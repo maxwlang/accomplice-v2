@@ -10,6 +10,7 @@ import {
     bold,
     codeBlock
 } from 'discord.js'
+import SimpleEmbed from '../embeds/SimpleEmbed'
 
 // import { readdir } from 'fs/promises'
 
@@ -92,7 +93,11 @@ export default class DebugCommand implements Command {
         interaction: ChatInputCommandInteraction
     }): Promise<void> => {
         if (interaction.user.id !== botAdminUserSnowflake) {
-            await interaction.reply('You do not have permission to do this.')
+            const embed = new SimpleEmbed('You do not have permission to do this.', {
+                color: 'Red',
+                title: 'Permission Denied'
+            }).getEmbed()
+            await interaction.reply({ embeds: [embed] })
             return
         }
 
@@ -126,7 +131,14 @@ export default class DebugCommand implements Command {
                 break
 
             default:
-                await interaction.reply('Unhandled subcommand supplied.')
+                await interaction.reply({
+                    embeds: [
+                        new SimpleEmbed('Unhandled subcommand supplied.', {
+                            color: 'Red',
+                            title: 'Error'
+                        }).getEmbed()
+                    ]
+                })
         }
     }
 
@@ -136,7 +148,14 @@ export default class DebugCommand implements Command {
     ): Promise<void> => {
         const timers = bot.timers
         if (timers.size === 0) {
-            await interaction.reply('No timers in memory.')
+            await interaction.reply({
+                embeds: [
+                    new SimpleEmbed('No timers in memory.', {
+                        color: 'Orange',
+                        title: 'Timers'
+                    }).getEmbed()
+                ]
+            })
             return
         }
 
@@ -144,9 +163,14 @@ export default class DebugCommand implements Command {
             .map(timer => `- ${timer}`)
             .join('\n')
 
-        await interaction.reply(
-            `${bold('Active timers in memory:')}\n\n${codeBlock(timerList)}`
-        )
+        await interaction.reply({
+            embeds: [
+                new SimpleEmbed(
+                    `${bold('Active timers in memory:')}\n\n${codeBlock(timerList)}`,
+                    { title: 'Timers', color: 'Blue' }
+                ).getEmbed()
+            ]
+        })
     }
 
     public clearTimer = async (
@@ -156,14 +180,28 @@ export default class DebugCommand implements Command {
         const timerName = interaction.options.getString('timer-name', true)
         const timer = bot.timers.get(timerName)
         if (!timer) {
-            await interaction.reply(`No timer found with name ${timerName}.`)
+            await interaction.reply({
+                embeds: [
+                    new SimpleEmbed(`No timer found with name ${timerName}.`, {
+                        color: 'Orange',
+                        title: 'Timer'
+                    }).getEmbed()
+                ]
+            })
             return
         }
 
         clearTimeout(timer)
         bot.timers.delete(timerName)
 
-        await interaction.reply(`Timer ${timerName} cleared.`)
+        await interaction.reply({
+            embeds: [
+                new SimpleEmbed(`Timer ${timerName} cleared.`, {
+                    color: 'Green',
+                    title: 'Timer'
+                }).getEmbed()
+            ]
+        })
     }
 
     public eval = async (
@@ -185,7 +223,14 @@ export default class DebugCommand implements Command {
         }
 
         await interaction
-            .reply(`Result: ${codeBlock(`${result}`)}`)
+            .reply({
+                embeds: [
+                    new SimpleEmbed(`Result: ${codeBlock(`${result}`)}`, {
+                        color: 'Blue',
+                        title: 'Eval'
+                    }).getEmbed()
+                ]
+            })
             .catch(async e => {
                 if (e.code === 50035) {
                     await interaction.followUp(
@@ -207,9 +252,14 @@ export default class DebugCommand implements Command {
         })
 
         await interaction
-            .reply(
-                `Result:\n${codeBlock(`${JSON.stringify(result, null, 2)}`)}`
-            )
+            .reply({
+                embeds: [
+                    new SimpleEmbed(
+                        `Result:\n${codeBlock(`${JSON.stringify(result, null, 2)}`)}`,
+                        { title: 'SQL Result', color: 'Blue' }
+                    ).getEmbed()
+                ]
+            })
             .catch(async e => {
                 try {
                     if (e.code === 50035) {
@@ -298,6 +348,10 @@ export default class DebugCommand implements Command {
         statsMessage += `${bold('Reacting Users:')} ${reactingUserCount}\n`
         statsMessage += `${bold('Reactions:')} ${reactionCount}`
 
-        await interaction.reply(statsMessage)
+        await interaction.reply({
+            embeds: [
+                new SimpleEmbed(statsMessage, { title: 'Stats', color: 'Blue' }).getEmbed()
+            ]
+        })
     }
 }
