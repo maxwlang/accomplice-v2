@@ -1,6 +1,7 @@
 import ApplicationCommandRateLimit from './embeds/ApplicationCommandRateLimit'
 import Command from './types/Command'
 import CommandsRegistered from './embeds/CommandsRegistered'
+import SyncProgress from './embeds/SyncProgress'
 import EventHandle from './types/EventHandle'
 import { Leaderboard } from './sequelize/types/leaderboard'
 import LeaderboardEmbed from './embeds/Leaderboard'
@@ -23,6 +24,7 @@ import {
     Routes as DiscordRestRoutes,
     GuildTextBasedChannel,
     IntentsBitField,
+    Message,
     NonThreadGuildBasedChannel,
     OAuth2Guild,
     Partials,
@@ -509,6 +511,29 @@ export default class Accomplice extends Client {
 
             this.logger.debug(`channelTaskChunks: ${channelTaskChunks.length}`)
 
+            let progressMessage: Message | undefined
+            let progressInterval: NodeJS.Timeout | undefined
+
+            if (interaction) {
+                const progressEmbed = new SyncProgress().getEmbed({
+                    progress: 0,
+                    total: channelTaskChunks.length
+                })
+                progressMessage = await interaction.followUp({
+                    embeds: [progressEmbed]
+                })
+                progressInterval = setInterval(() => {
+                    if (!progressMessage) return
+                    const embed = new SyncProgress().getEmbed({
+                        progress: chunkProgress,
+                        total: channelTaskChunks.length
+                    })
+                    progressMessage
+                        .edit({ embeds: [embed] })
+                        .catch(e => this.logger.error(e))
+                }, 5000)
+            }
+
             for (const channelTaskChunk of channelTaskChunks) {
                 const channelTask = channelTaskChunk.map(channel => {
                     if (channel) {
@@ -522,10 +547,12 @@ export default class Accomplice extends Client {
                 await Promise.all(channelTask)
                 chunkProgress++
 
-                if (interaction) {
-                    interaction.followUp(
-                        `progress update: ${chunkProgress} chunks complete of ${channelTaskChunks.length}` // TODO: Embed
-                    )
+                if (progressMessage) {
+                    const progressEmbed = new SyncProgress().getEmbed({
+                        progress: chunkProgress,
+                        total: channelTaskChunks.length
+                    })
+                    await progressMessage.edit({ embeds: [progressEmbed] })
                 }
             }
 
@@ -538,8 +565,21 @@ export default class Accomplice extends Client {
                 }
             )
 
-            if (interaction) {
-                await interaction.followUp('finished') // TODO: Embed
+            if (progressInterval) clearInterval(progressInterval)
+            if (interaction && progressMessage) {
+                const finishedEmbed = new SyncProgress().getEmbed({
+                    progress: chunkProgress,
+                    total: channelTaskChunks.length,
+                    done: true
+                })
+                await progressMessage.edit({ embeds: [finishedEmbed] })
+            } else if (interaction) {
+                const finishedEmbed = new SyncProgress().getEmbed({
+                    progress: chunkProgress,
+                    total: channelTaskChunks.length,
+                    done: true
+                })
+                await interaction.followUp({ embeds: [finishedEmbed] })
             }
         } catch (e) {
             await Guild.update(
