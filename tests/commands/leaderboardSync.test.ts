@@ -37,7 +37,10 @@ describe('Leaderboard synchronize command', () => {
             reply
         } as any
         await cmd.execute({ bot: {} as any, interaction })
-        expect(reply).toHaveBeenCalledWith(
+        const response = reply.mock.calls[0][0]
+        expect(response.embeds).toHaveLength(1)
+        const embed = response.embeds[0]
+        expect(embed.data.description).toBe(
             'Confirmation required to resync entire guild'
         )
     })
