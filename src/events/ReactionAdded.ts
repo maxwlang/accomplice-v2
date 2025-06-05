@@ -3,7 +3,7 @@ import EventHandle from '../types/EventHandle'
 import { Guild } from '../sequelize/types/guild'
 import { Reaction } from '../sequelize/types/reaction'
 import { User } from '../sequelize/types/user'
-import { getEmojiType } from '../util/emoji'
+import { getEmojiType, normalizeEmoji } from '../util/emoji'
 import { isEmpty } from 'ramda'
 import { v4 as uuidv4 } from 'uuid'
 
@@ -143,7 +143,10 @@ export default class ReactionAdded implements EventHandle {
                 uuid: uuidv4(),
                 guildId: guildRow.uuid,
                 type: emojiType,
-                content: emoji.name,
+                content:
+                    emojiType === ReactionType.Emoji && emoji.name
+                        ? normalizeEmoji(emoji.name)
+                        : emoji.name,
                 emojiId: emoji.id || null,
                 messageSnowflake: messageReaction.message.id,
                 reacteeUserId: reactee.uuid,

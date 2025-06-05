@@ -13,3 +13,16 @@ export function getEmojiType(
 
 export const hasEmoji = (emoji: string): boolean =>
     Object.keys(emojilib).find(key => key === emoji) !== undefined
+
+export const normalizeEmoji = (emoji: string): string =>
+    Array.from(emoji)
+        .map(cp => cp.codePointAt(0)?.toString(16))
+        .filter(Boolean)
+        .join('-')
+
+export const denormalizeEmoji = (normalized: string): string =>
+    String.fromCodePoint(
+        ...normalized
+            .split('-')
+            .map(p => parseInt(p, 16))
+    )

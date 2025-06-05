@@ -16,6 +16,7 @@ import {
     userMention
 } from 'discord.js'
 import { ReactionCount, ReactionType } from '../sequelize/types/reaction'
+import { denormalizeEmoji } from '../util/emoji'
 
 export default class LeaderboardEmbed implements Embed {
     public getEmbed({
@@ -53,7 +54,7 @@ export default class LeaderboardEmbed implements Embed {
                 tracker.reactionContent &&
                 tracker.reactionType === ReactionType.Emoji
             ) {
-                trackerEmoji = tracker.reactionContent
+                trackerEmoji = denormalizeEmoji(tracker.reactionContent)
             }
 
             return new StringSelectMenuOptionBuilder()
@@ -126,7 +127,7 @@ export default class LeaderboardEmbed implements Embed {
         if (tracker.reactionContent) {
             switch (tracker.reactionType) {
                 case ReactionType.Emoji:
-                    displayEmoji = tracker.reactionContent
+                    displayEmoji = denormalizeEmoji(tracker.reactionContent)
                     break
                 case ReactionType.Custom:
                     displayEmoji = formatEmoji(tracker.reactionContent)
