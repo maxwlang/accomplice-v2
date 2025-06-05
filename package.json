@@ -14,8 +14,8 @@
     "winston": "^3.8.2"
   },
   "scripts": {
-    "start": "node dist/index.js",
-    "dev": "yarn clean && yarn lint && yarn build && node dist/index.js",
+    "start": "node dist/src/index.js",
+    "dev": "yarn clean && yarn lint && yarn build && yarn start",
     "clean": "rimraf dist/",
     "build": "tsc",
     "lint": "eslint . --ext .ts",
