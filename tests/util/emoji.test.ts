@@ -1,4 +1,9 @@
-import { getEmojiType, hasEmoji } from '../../src/util/emoji'
+import {
+    getEmojiType,
+    hasEmoji,
+    normalizeEmoji,
+    denormalizeEmoji
+} from '../../src/util/emoji'
 import { ReactionType } from '../../src/sequelize/types/reaction'
 
 describe('emoji utilities', () => {
@@ -22,5 +27,11 @@ describe('emoji utilities', () => {
 
     it('hasEmoji finds known emoji', () => {
         expect(hasEmoji('😀')).toBe(true)
+    })
+
+    it('normalizes and denormalizes emoji', () => {
+        const e = '😀'
+        const normalized = normalizeEmoji(e)
+        expect(denormalizeEmoji(normalized)).toBe(e)
     })
 })

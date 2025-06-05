@@ -5,6 +5,7 @@ import { avatarDisplayName } from '../config/discord'
 import { isEmpty } from 'ramda'
 
 import { EmbedBuilder, bold, formatEmoji, inlineCode } from 'discord.js'
+import { denormalizeEmoji } from '../util/emoji'
 
 export default class TrackerList implements Embed {
     public getEmbed({ trackers }: { trackers: Tracker[] }): EmbedBuilder {
@@ -47,7 +48,7 @@ export default class TrackerList implements Embed {
         switch (tracker.reactionType) {
             case ReactionType.Emoji: {
                 if (tracker.reactionContent) {
-                    reaction = tracker.reactionContent
+                    reaction = denormalizeEmoji(tracker.reactionContent)
                 }
                 break
             }

@@ -5,7 +5,7 @@ import { LeaderboardTrackers } from '../sequelize/types/leaderboard_trackers'
 import { ReactionType } from '../sequelize/types/reaction'
 import { Tracker } from '../sequelize/types/tracker'
 import TrackerList from '../embeds/TrackerList'
-import { hasEmoji } from '../util/emoji'
+import { hasEmoji, normalizeEmoji } from '../util/emoji'
 import { v4 as uuidv4 } from 'uuid'
 
 import {
@@ -194,7 +194,7 @@ export default class LeaderboardCommand implements Command {
 
         if (isRegularEmoji) {
             reactionType = ReactionType.Emoji
-            reactionContent = reaction
+            reactionContent = normalizeEmoji(reaction)
         } else if (guildEmojiNumbers) {
             const guildEmoji = bot.emojis.cache.get(guildEmojiNumbers)
             if (guildEmoji) {

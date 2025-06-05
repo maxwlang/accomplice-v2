@@ -2,6 +2,7 @@ import TrackerList from '../../src/embeds/TrackerList'
 import { Colors } from 'discord.js'
 import { ReactionType } from '../../src/sequelize/types/reaction'
 import { Tracker } from '../../src/sequelize/types/tracker'
+import { normalizeEmoji } from '../../src/util/emoji'
 
 describe('TrackerList embed', () => {
     it('shows empty state', () => {
@@ -21,7 +22,7 @@ describe('TrackerList embed', () => {
                 reactionType: ReactionType.Emoji,
                 displayBots: false,
                 displayMissingUsers: false,
-                reactionContent: '⭐',
+                reactionContent: normalizeEmoji('⭐'),
                 recognizeSelfReactions: false,
                 recognizeBotReactions: false
             }
