@@ -19,7 +19,7 @@
     "clean": "rimraf dist/",
     "build": "tsc",
     "lint": "eslint . --ext .ts",
-    "test": "true",
+    "test": "jest",
     "migrate": "sequelize-cli db:migrate --env production --config ./src/sequelize/config/sequelize.json --seeders-path ./src/sequelize/seeders --models-path ./src/sequelize/models --migrations-path ./src/sequelize/migrations"
   },
   "engines": {
