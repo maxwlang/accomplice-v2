@@ -1,7 +1,6 @@
 import Accomplice from '../accomplice'
 import EventHandle from '../types/EventHandle'
 import { Guild } from 'discord.js'
-import { Guild as GuildRow } from '../sequelize/types/guild'
 import { isEmpty } from 'ramda'
 
 export default class GuildLeave implements EventHandle {
@@ -19,71 +18,8 @@ export default class GuildLeave implements EventHandle {
     }): Promise<void> => {
         if (!args || isEmpty(args)) return
         const guild = args[0] as Guild
-        const {
-            Guild,
-            Starboard,
-            Leaderboard,
-            Reaction,
-            GuildUser,
-            LeaderboardTrackers,
-            Tracker
-        } = bot.sequelize.models
-
         bot.logger.info(`Left guild "${guild.name}" (${guild.id})`)
 
-        const guildRow: GuildRow = await Guild.findOne({
-            where: { snowflake: guild.id }
-        })
-        if (guildRow === null || !guildRow) {
-            bot.logger.error(`Failed to locate guild in database`)
-            return
-        }
-
-        // Stop and remove any guild timers
-        bot.timers.forEach((timer, key) => {
-            if (key.startsWith(`${guild.id}_`)) {
-                clearInterval(timer)
-                bot.timers.delete(key)
-            }
-        })
-
-        // Remove data
-        await Promise.all([
-            Guild.destroy({
-                where: {
-                    uuid: guildRow.uuid
-                }
-            }),
-            Starboard.destroy({
-                where: {
-                    guildId: guildRow.uuid
-                }
-            }),
-            Leaderboard.destroy({
-                where: {
-                    guildId: guildRow.uuid
-                }
-            }),
-            Reaction.destroy({
-                where: {
-                    guildId: guildRow.uuid
-                }
-            }),
-            GuildUser.destroy({
-                where: {
-                    guildId: guildRow.uuid
-                }
-            }),
-            LeaderboardTrackers.destroy({
-                where: {
-                    guildId: guildRow.uuid
-                }
-            }),
-            Tracker.destroy({
-                where: {
-                    guildId: guildRow.uuid
-                }
-            })
-        ])
+        await bot.cleanupGuildData(guild.id)
     }
 }

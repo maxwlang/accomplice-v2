@@ -943,6 +943,63 @@ export default class Accomplice extends Client {
         )
     }
 
+    public async cleanupGuildData(guildSnowflake: string): Promise<void> {
+        const {
+            Guild,
+            Starboard,
+            Leaderboard,
+            Reaction,
+            GuildUser,
+            LeaderboardTrackers,
+            Tracker
+        } = this.sequelize.models
+
+        const guildRow: Guild | null = await Guild.findOne({
+            where: { snowflake: guildSnowflake }
+        })
+
+        if (!guildRow) {
+            this.logger.error(
+                `Failed to locate guild ${guildSnowflake} in database`
+            )
+            return
+        }
+
+        this.timers.forEach((timer, key) => {
+            if (key.startsWith(`${guildSnowflake}_`)) {
+                clearInterval(timer)
+                this.timers.delete(key)
+            }
+        })
+
+        await Promise.all([
+            Guild.destroy({ where: { uuid: guildRow.uuid } }),
+            Starboard.destroy({ where: { guildId: guildRow.uuid } }),
+            Leaderboard.destroy({ where: { guildId: guildRow.uuid } }),
+            Reaction.destroy({ where: { guildId: guildRow.uuid } }),
+            GuildUser.destroy({ where: { guildId: guildRow.uuid } }),
+            LeaderboardTrackers.destroy({ where: { guildId: guildRow.uuid } }),
+            Tracker.destroy({ where: { guildId: guildRow.uuid } })
+        ])
+    }
+
+    public async cleanupLeftGuilds(): Promise<void> {
+        const { Guild } = this.sequelize.models
+        const storedGuilds: Guild[] = await Guild.findAll()
+        const currentGuilds = await this.guilds.fetch()
+
+        const cleanupTasks = storedGuilds
+            .filter(guildRow => !currentGuilds.has(guildRow.snowflake))
+            .map(guildRow => {
+                this.logger.info(
+                    `Cleaning up data for guild ${guildRow.snowflake} that was left while offline`
+                )
+                return this.cleanupGuildData(guildRow.snowflake)
+            })
+
+        await Promise.all(cleanupTasks)
+    }
+
     public async start(): Promise<Accomplice> {
         // Setup redis, perform quick write check
         const uniqueKey = uuidv4()
