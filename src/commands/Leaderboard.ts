@@ -11,10 +11,10 @@ import { v4 as uuidv4 } from 'uuid'
 
 import {
     ChatInputCommandInteraction,
+    NonThreadGuildBasedChannel,
     SlashCommandBuilder,
     channelMention,
-    inlineCode,
-    NonThreadGuildBasedChannel
+    inlineCode
 } from 'discord.js'
 
 export default class LeaderboardCommand implements Command {
@@ -692,7 +692,9 @@ export default class LeaderboardCommand implements Command {
         const confirm = interaction.options.getBoolean('confirm') ?? false
 
         if (!confirm) {
-            await interaction.reply('Confirmation required to resync entire guild')
+            await interaction.reply(
+                'Confirmation required to resync entire guild'
+            )
             return
         }
 
