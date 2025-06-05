@@ -274,7 +274,9 @@ export default class LeaderboardCommand implements Command {
                             tracker.uuid
                         )}${
                             displayName
-                                ? ` and display name ${inlineCode(displayName)}.`
+                                ? ` and display name ${inlineCode(
+                                      displayName
+                                  )}.`
                                 : '.'
                         } To view trackers available to this guild, use the ${inlineCode(
                             '/leaderboard trackers'
@@ -334,10 +336,13 @@ export default class LeaderboardCommand implements Command {
             bot.logger.error('Failed to locate guild in database')
             await interaction.reply({
                 embeds: [
-                    new SimpleEmbed('An error has occured, please try again later', {
-                        color: 'Red',
-                        title: 'Error'
-                    }).getEmbed()
+                    new SimpleEmbed(
+                        'An error has occured, please try again later',
+                        {
+                            color: 'Red',
+                            title: 'Error'
+                        }
+                    ).getEmbed()
                 ]
             })
 
@@ -405,7 +410,9 @@ export default class LeaderboardCommand implements Command {
         await interaction.reply({
             embeds: [
                 new SimpleEmbed(
-                    `The tracker ${inlineCode(tracker.uuid)} has been destroyed`,
+                    `The tracker ${inlineCode(
+                        tracker.uuid
+                    )} has been destroyed`,
                     { title: 'Tracker Destroyed', color: 'Green' }
                 ).getEmbed()
             ]
@@ -425,10 +432,13 @@ export default class LeaderboardCommand implements Command {
             bot.logger.error(`Failed to locate guild in database`)
             await interaction.reply({
                 embeds: [
-                    new SimpleEmbed('An error has occured, please try again later', {
-                        color: 'Red',
-                        title: 'Error'
-                    }).getEmbed()
+                    new SimpleEmbed(
+                        'An error has occured, please try again later',
+                        {
+                            color: 'Red',
+                            title: 'Error'
+                        }
+                    ).getEmbed()
                 ]
             })
 

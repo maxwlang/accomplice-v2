@@ -93,10 +93,13 @@ export default class DebugCommand implements Command {
         interaction: ChatInputCommandInteraction
     }): Promise<void> => {
         if (interaction.user.id !== botAdminUserSnowflake) {
-            const embed = new SimpleEmbed('You do not have permission to do this.', {
-                color: 'Red',
-                title: 'Permission Denied'
-            }).getEmbed()
+            const embed = new SimpleEmbed(
+                'You do not have permission to do this.',
+                {
+                    color: 'Red',
+                    title: 'Permission Denied'
+                }
+            ).getEmbed()
             await interaction.reply({ embeds: [embed] })
             return
         }
@@ -166,7 +169,9 @@ export default class DebugCommand implements Command {
         await interaction.reply({
             embeds: [
                 new SimpleEmbed(
-                    `${bold('Active timers in memory:')}\n\n${codeBlock(timerList)}`,
+                    `${bold('Active timers in memory:')}\n\n${codeBlock(
+                        timerList
+                    )}`,
                     { title: 'Timers', color: 'Blue' }
                 ).getEmbed()
             ]
@@ -255,7 +260,9 @@ export default class DebugCommand implements Command {
             .reply({
                 embeds: [
                     new SimpleEmbed(
-                        `Result:\n${codeBlock(`${JSON.stringify(result, null, 2)}`)}`,
+                        `Result:\n${codeBlock(
+                            `${JSON.stringify(result, null, 2)}`
+                        )}`,
                         { title: 'SQL Result', color: 'Blue' }
                     ).getEmbed()
                 ]
@@ -350,7 +357,10 @@ export default class DebugCommand implements Command {
 
         await interaction.reply({
             embeds: [
-                new SimpleEmbed(statsMessage, { title: 'Stats', color: 'Blue' }).getEmbed()
+                new SimpleEmbed(statsMessage, {
+                    title: 'Stats',
+                    color: 'Blue'
+                }).getEmbed()
             ]
         })
     }

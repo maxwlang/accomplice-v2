@@ -1,4 +1,4 @@
-import { EmbedBuilder, ColorResolvable } from 'discord.js'
+import { ColorResolvable, EmbedBuilder } from 'discord.js'
 import { avatarDisplayName } from '../config/discord'
 import Embed from '../types/Embed'
 
@@ -7,7 +7,10 @@ export default class SimpleEmbed implements Embed {
     private title?: string
     private color: ColorResolvable
 
-    constructor(description: string, options?: { title?: string; color?: ColorResolvable }) {
+    constructor(
+        description: string,
+        options?: { title?: string; color?: ColorResolvable }
+    ) {
         this.description = description
         this.title = options?.title
         this.color = options?.color ?? 'Blue'

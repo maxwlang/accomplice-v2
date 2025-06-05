@@ -1,7 +1,7 @@
 import Accomplice from '../accomplice'
 import EventHandle from '../types/EventHandle'
 import { Guild } from '../sequelize/types/guild'
-import { Reaction } from '../sequelize/types/reaction'
+import { Reaction, ReactionType } from '../sequelize/types/reaction'
 import { User } from '../sequelize/types/user'
 import { getEmojiType, normalizeEmoji } from '../util/emoji'
 import { isEmpty } from 'ramda'

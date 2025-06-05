@@ -21,8 +21,4 @@ export const normalizeEmoji = (emoji: string): string =>
         .join('-')
 
 export const denormalizeEmoji = (normalized: string): string =>
-    String.fromCodePoint(
-        ...normalized
-            .split('-')
-            .map(p => parseInt(p, 16))
-    )
+    String.fromCodePoint(...normalized.split('-').map(p => parseInt(p, 16)))

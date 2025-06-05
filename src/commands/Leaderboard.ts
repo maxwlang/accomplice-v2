@@ -338,10 +338,13 @@ export default class LeaderboardCommand implements Command {
             bot.logger.error('Failed to locate guild in database')
             await interaction.reply({
                 embeds: [
-                    new SimpleEmbed('An error has occured, please try again later', {
-                        color: 'Red',
-                        title: 'Error'
-                    }).getEmbed()
+                    new SimpleEmbed(
+                        'An error has occured, please try again later',
+                        {
+                            color: 'Red',
+                            title: 'Error'
+                        }
+                    ).getEmbed()
                 ]
             })
 
@@ -430,10 +433,13 @@ export default class LeaderboardCommand implements Command {
             bot.logger.error(`Failed to locate guild in database`)
             await interaction.reply({
                 embeds: [
-                    new SimpleEmbed('An error has occured, please try again later', {
-                        color: 'Red',
-                        title: 'Error'
-                    }).getEmbed()
+                    new SimpleEmbed(
+                        'An error has occured, please try again later',
+                        {
+                            color: 'Red',
+                            title: 'Error'
+                        }
+                    ).getEmbed()
                 ]
             })
 
@@ -472,10 +478,13 @@ export default class LeaderboardCommand implements Command {
         if (isEmpty(leaderboardTrackers)) {
             await interaction.reply({
                 embeds: [
-                    new SimpleEmbed('There are no trackers on this leaderboard', {
-                        color: 'Orange',
-                        title: 'No Trackers'
-                    }).getEmbed()
+                    new SimpleEmbed(
+                        'There are no trackers on this leaderboard',
+                        {
+                            color: 'Orange',
+                            title: 'No Trackers'
+                        }
+                    ).getEmbed()
                 ]
             })
             return
@@ -513,10 +522,13 @@ export default class LeaderboardCommand implements Command {
         if (!guildRow || guildRow === null) {
             await interaction.reply({
                 embeds: [
-                    new SimpleEmbed('An error has occured, please try again later', {
-                        color: 'Red',
-                        title: 'Error'
-                    }).getEmbed()
+                    new SimpleEmbed(
+                        'An error has occured, please try again later',
+                        {
+                            color: 'Red',
+                            title: 'Error'
+                        }
+                    ).getEmbed()
                 ]
             })
 
@@ -533,10 +545,13 @@ export default class LeaderboardCommand implements Command {
             bot.logger.debug(`Failed to locate leaderboard in database`)
             await interaction.reply({
                 embeds: [
-                    new SimpleEmbed('There is no leaderboard in the provided channel', {
-                        color: 'Orange',
-                        title: 'Leaderboard Missing'
-                    }).getEmbed()
+                    new SimpleEmbed(
+                        'There is no leaderboard in the provided channel',
+                        {
+                            color: 'Orange',
+                            title: 'Leaderboard Missing'
+                        }
+                    ).getEmbed()
                 ]
             })
             return
@@ -553,10 +568,13 @@ export default class LeaderboardCommand implements Command {
             bot.logger.debug('The requested tracker does not exist')
             await interaction.reply({
                 embeds: [
-                    new SimpleEmbed('The tracker you have provided does not exist', {
-                        color: 'Red',
-                        title: 'Tracker Missing'
-                    }).getEmbed()
+                    new SimpleEmbed(
+                        'The tracker you have provided does not exist',
+                        {
+                            color: 'Red',
+                            title: 'Tracker Missing'
+                        }
+                    ).getEmbed()
                 ]
             })
             return
@@ -817,10 +835,13 @@ export default class LeaderboardCommand implements Command {
         if (!confirm) {
             await interaction.reply({
                 embeds: [
-                    new SimpleEmbed('Confirmation required to resync entire guild', {
-                        color: 'Orange',
-                        title: 'Confirmation Required'
-                    }).getEmbed()
+                    new SimpleEmbed(
+                        'Confirmation required to resync entire guild',
+                        {
+                            color: 'Orange',
+                            title: 'Confirmation Required'
+                        }
+                    ).getEmbed()
                 ]
             })
             return

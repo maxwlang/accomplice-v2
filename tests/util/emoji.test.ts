@@ -1,8 +1,8 @@
 import {
+    denormalizeEmoji,
     getEmojiType,
     hasEmoji,
-    normalizeEmoji,
-    denormalizeEmoji
+    normalizeEmoji
 } from '../../src/util/emoji'
 import { ReactionType } from '../../src/sequelize/types/reaction'
 

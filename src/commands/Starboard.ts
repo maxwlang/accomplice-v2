@@ -154,8 +154,10 @@ export default class StarboardCommand implements Command {
     }: {
         interaction: ChatInputCommandInteraction
     }): Promise<void> => {
-        const embed = new SimpleEmbed('Pong!', { title: 'Pong', color: 'Green' })
-            .getEmbed()
+        const embed = new SimpleEmbed('Pong!', {
+            title: 'Pong',
+            color: 'Green'
+        }).getEmbed()
         await interaction.reply({ embeds: [embed] })
     }
 }
