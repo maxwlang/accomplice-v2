@@ -85,7 +85,7 @@ export default class Accomplice extends Client {
     public timers: Map<string, NodeJS.Timeout>
 
     private async registerEvents(): Promise<void> {
-        await readdir('./dist/events')
+        await readdir('./dist/src/events')
             .then((files: string[]) =>
                 files.filter(file => file.endsWith('.js'))
             )
@@ -244,7 +244,7 @@ export default class Accomplice extends Client {
         retry?: boolean
     ): Promise<boolean | void> {
         return (
-            readdir('./dist/commands')
+            readdir('./dist/src/commands')
                 .then((files: string[]) =>
                     files.filter(file => file.endsWith('.js'))
                 )

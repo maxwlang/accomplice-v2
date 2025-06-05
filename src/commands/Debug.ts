@@ -234,12 +234,12 @@ export default class DebugCommand implements Command {
     //     _bot: Accomplice,
     //     interaction: ChatInputCommandInteraction
     // ): Promise<void> => {
-    //     const embedFiles = await readdir('./dist/embeds').then(
+    //     const embedFiles = await readdir('./dist/src/embeds').then(
     //         (files: string[]) => files.filter(file => file.endsWith('.js'))
     //     )
 
     //     const embeds = await embedFiles.map(async embedFile => {
-    //         const EmbedClass = (await import(`./dist/embeds/${embedFile}`))
+    //         const EmbedClass = (await import(`./dist/src/embeds/${embedFile}`))
     //             .default
     //         const embedInstance: Embed = new EmbedClass()
     //         const embed = await embedInstance.getEmbed()
@@ -267,7 +267,7 @@ export default class DebugCommand implements Command {
     //     )
 
     //     try {
-    //         const EmbedClass = (await import(`./dist/embeds/${embedName}.js`))
+    //         const EmbedClass = (await import(`./dist/src/embeds/${embedName}.js`))
     //             .default
     //         const embedInstance: Embed = new EmbedClass()
     //         const embed = await embedInstance.getEmbed()
