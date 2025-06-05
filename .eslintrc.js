@@ -73,6 +73,13 @@ module.exports = {
                     }
                 ]
             }
+        },
+        {
+            files: ['tests/**/*.ts'],
+            rules: {
+                '@typescript-eslint/no-explicit-any': 0,
+                '@typescript-eslint/no-var-requires': 0
+            }
         }
     ]
 }
