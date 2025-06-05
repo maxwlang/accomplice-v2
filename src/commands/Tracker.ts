@@ -14,6 +14,7 @@ import {
     channelMention,
     inlineCode
 } from 'discord.js'
+import SimpleEmbed from '../embeds/SimpleEmbed'
 
 export default class LeaderboardCommand implements Command {
     // Should be admin perms
@@ -139,7 +140,14 @@ export default class LeaderboardCommand implements Command {
                 break
 
             default:
-                await interaction.reply('Unhandled subcommand supplied')
+                await interaction.reply({
+                    embeds: [
+                        new SimpleEmbed('Unhandled subcommand supplied', {
+                            color: 'Red',
+                            title: 'Error'
+                        }).getEmbed()
+                    ]
+                })
         }
     }
 
@@ -165,11 +173,16 @@ export default class LeaderboardCommand implements Command {
             bot.logger.debug(
                 'Display name is too long, will not create tracker'
             )
-            await interaction.reply(
-                `The name you specified ${inlineCode(
-                    displayName
-                )} is over the 32 character name limit. Please correct this and try again`
-            )
+            await interaction.reply({
+                embeds: [
+                    new SimpleEmbed(
+                        `The name you specified ${inlineCode(
+                            displayName
+                        )} is over the 32 character name limit. Please correct this and try again`,
+                        { color: 'Red', title: 'Invalid Name' }
+                    ).getEmbed()
+                ]
+            })
             return
         }
 
@@ -191,16 +204,26 @@ export default class LeaderboardCommand implements Command {
                 reactionContent = guildEmoji.id
             } else {
                 bot.logger.error('Failed to parse discord emoji')
-                await interaction.reply(
-                    'An issue occured while trying to parse the supplied reaction. Please rename it or try another one. When using custom emotes, for now you must only use emotes available on this server'
-                )
+                await interaction.reply({
+                    embeds: [
+                        new SimpleEmbed(
+                            'An issue occured while trying to parse the supplied reaction. Please rename it or try another one. When using custom emotes, for now you must only use emotes available on this server',
+                            { color: 'Red', title: 'Error' }
+                        ).getEmbed()
+                    ]
+                })
                 return
             }
         } else {
             bot.logger.error('Unknown content supplied as reaction')
-            await interaction.reply(
-                'The reaction you have supplied is unsupported. Please try another one'
-            )
+            await interaction.reply({
+                embeds: [
+                    new SimpleEmbed(
+                        'The reaction you have supplied is unsupported. Please try another one',
+                        { color: 'Red', title: 'Error' }
+                    ).getEmbed()
+                ]
+            })
             return
         }
 
@@ -210,9 +233,14 @@ export default class LeaderboardCommand implements Command {
 
         if (!guild || guild === null) {
             bot.logger.error("Couldn't locate guild")
-            await interaction.reply(
-                'An error occured while trying to lookup your guild. Please try again later'
-            )
+            await interaction.reply({
+                embeds: [
+                    new SimpleEmbed(
+                        'An error occured while trying to lookup your guild. Please try again later',
+                        { color: 'Red', title: 'Error' }
+                    ).getEmbed()
+                ]
+            })
             return
         }
 
@@ -239,33 +267,42 @@ export default class LeaderboardCommand implements Command {
             })
 
         if (created) {
-            // TODO: Make these embeds
-            await interaction.reply(
-                `Your tracker has been created with identifier ${inlineCode(
-                    tracker.uuid
-                )}${
-                    displayName
-                        ? ` and display name ${inlineCode(displayName)}.`
-                        : '.'
-                } To view trackers available to this guild, use the ${inlineCode(
-                    '/leaderboard trackers'
-                )} command. If you'd like to use this tracker, use the ${inlineCode(
-                    '/leaderboard track'
-                )} command. For example ${inlineCode(
-                    `/leaderboard track channel:"#Rules" tracker:"${tracker.uuid}"`
-                )}`
-            )
+            await interaction.reply({
+                embeds: [
+                    new SimpleEmbed(
+                        `Your tracker has been created with identifier ${inlineCode(
+                            tracker.uuid
+                        )}${
+                            displayName
+                                ? ` and display name ${inlineCode(displayName)}.`
+                                : '.'
+                        } To view trackers available to this guild, use the ${inlineCode(
+                            '/leaderboard trackers'
+                        )} command. If you'd like to use this tracker, use the ${inlineCode(
+                            '/leaderboard track'
+                        )} command. For example ${inlineCode(
+                            `/leaderboard track channel:"#Rules" tracker:"${tracker.uuid}"`
+                        )}`,
+                        { title: 'Tracker Created', color: 'Green' }
+                    ).getEmbed()
+                ]
+            })
         } else {
             bot.logger.debug('Tracker already exists')
-            await interaction.reply(
-                `The tracker you are trying to create already exists. To view trackers available to this guild, use the ${inlineCode(
-                    '/leaderboard trackers'
-                )} command. If you'd like to use this tracker, use the ${inlineCode(
-                    '/leaderboard track'
-                )} command. For example ${inlineCode(
-                    `/leaderboard track channel:"#Rules" tracker:"${tracker.uuid}"`
-                )}`
-            )
+            await interaction.reply({
+                embeds: [
+                    new SimpleEmbed(
+                        `The tracker you are trying to create already exists. To view trackers available to this guild, use the ${inlineCode(
+                            '/leaderboard trackers'
+                        )} command. If you'd like to use this tracker, use the ${inlineCode(
+                            '/leaderboard track'
+                        )} command. For example ${inlineCode(
+                            `/leaderboard track channel:"#Rules" tracker:"${tracker.uuid}"`
+                        )}`,
+                        { title: 'Tracker Exists', color: 'Orange' }
+                    ).getEmbed()
+                ]
+            })
         }
     }
 
@@ -275,9 +312,14 @@ export default class LeaderboardCommand implements Command {
     ): Promise<void> {
         const actionConfirm = interaction.options.getBoolean('confirm', true)
         if (actionConfirm !== true) {
-            await interaction.reply(
-                'Please confirm this destructive action by setting the `confirm` command argument to true'
-            )
+            await interaction.reply({
+                embeds: [
+                    new SimpleEmbed(
+                        'Please confirm this destructive action by setting the `confirm` command argument to true',
+                        { color: 'Orange', title: 'Confirmation Required' }
+                    ).getEmbed()
+                ]
+            })
 
             return
         }
@@ -290,9 +332,14 @@ export default class LeaderboardCommand implements Command {
 
         if (!guildRow || guildRow === null) {
             bot.logger.error('Failed to locate guild in database')
-            await interaction.reply(
-                'An error has occured, please try again later'
-            )
+            await interaction.reply({
+                embeds: [
+                    new SimpleEmbed('An error has occured, please try again later', {
+                        color: 'Red',
+                        title: 'Error'
+                    }).getEmbed()
+                ]
+            })
 
             return
         }
@@ -307,13 +354,18 @@ export default class LeaderboardCommand implements Command {
         })
 
         if (!tracker || tracker === null) {
-            await interaction.reply(
-                `The tracker ${channelMention(
-                    trackerId
-                )} does not exist. If you would like to add a tracker please use the ${inlineCode(
-                    '/leaderboard tracker-create'
-                )} command`
-            )
+            await interaction.reply({
+                embeds: [
+                    new SimpleEmbed(
+                        `The tracker ${channelMention(
+                            trackerId
+                        )} does not exist. If you would like to add a tracker please use the ${inlineCode(
+                            '/leaderboard tracker-create'
+                        )} command`,
+                        { title: 'Tracker Missing', color: 'Red' }
+                    ).getEmbed()
+                ]
+            })
             return
         }
 
@@ -350,9 +402,14 @@ export default class LeaderboardCommand implements Command {
             )
         }
 
-        await interaction.reply(
-            `The tracker ${inlineCode(tracker.uuid)} has been destroyed`
-        )
+        await interaction.reply({
+            embeds: [
+                new SimpleEmbed(
+                    `The tracker ${inlineCode(tracker.uuid)} has been destroyed`,
+                    { title: 'Tracker Destroyed', color: 'Green' }
+                ).getEmbed()
+            ]
+        })
     }
 
     private async listTrackers(
@@ -366,9 +423,14 @@ export default class LeaderboardCommand implements Command {
 
         if (!guildRow || guildRow === null) {
             bot.logger.error(`Failed to locate guild in database`)
-            await interaction.reply(
-                'An error has occured, please try again later'
-            )
+            await interaction.reply({
+                embeds: [
+                    new SimpleEmbed('An error has occured, please try again later', {
+                        color: 'Red',
+                        title: 'Error'
+                    }).getEmbed()
+                ]
+            })
 
             return
         }

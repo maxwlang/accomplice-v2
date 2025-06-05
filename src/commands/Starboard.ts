@@ -1,6 +1,7 @@
 import Command from '../types/Command'
 
 import { ChatInputCommandInteraction, SlashCommandBuilder } from 'discord.js'
+import SimpleEmbed from '../embeds/SimpleEmbed'
 
 export default class StarboardCommand implements Command {
     // Should be admin perms
@@ -153,7 +154,8 @@ export default class StarboardCommand implements Command {
     }: {
         interaction: ChatInputCommandInteraction
     }): Promise<void> => {
-        await interaction.reply('Pong!')
-        return
+        const embed = new SimpleEmbed('Pong!', { title: 'Pong', color: 'Green' })
+            .getEmbed()
+        await interaction.reply({ embeds: [embed] })
     }
 }

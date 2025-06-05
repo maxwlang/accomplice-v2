@@ -16,6 +16,7 @@ import {
     channelMention,
     inlineCode
 } from 'discord.js'
+import SimpleEmbed from '../embeds/SimpleEmbed'
 
 export default class LeaderboardCommand implements Command {
     // Should be admin perms
@@ -208,7 +209,14 @@ export default class LeaderboardCommand implements Command {
                 break
 
             default:
-                await interaction.reply('Unhandled subcommand supplied')
+                await interaction.reply({
+                    embeds: [
+                        new SimpleEmbed('Unhandled subcommand supplied', {
+                            color: 'Red',
+                            title: 'Error'
+                        }).getEmbed()
+                    ]
+                })
         }
     }
 
@@ -225,9 +233,14 @@ export default class LeaderboardCommand implements Command {
 
         if (!guildRow || guildRow === null) {
             bot.logger.error('Failed to locate guild in database')
-            await interaction.reply(
-                'An error has occured, please try again later'
-            )
+            await interaction.reply({
+                embeds: [
+                    new SimpleEmbed(
+                        'An error has occured, please try again later',
+                        { color: 'Red', title: 'Error' }
+                    ).getEmbed()
+                ]
+            })
 
             return
         }
@@ -235,9 +248,14 @@ export default class LeaderboardCommand implements Command {
         const channel = interaction.options.getChannel('channel', true)
         if (channel === null) {
             bot.logger.error('Failed to resolve channel option')
-            await interaction.reply(
-                'An error occured while locating the channel for the leaderboard'
-            )
+            await interaction.reply({
+                embeds: [
+                    new SimpleEmbed(
+                        'An error occured while locating the channel for the leaderboard',
+                        { color: 'Red', title: 'Error' }
+                    ).getEmbed()
+                ]
+            })
 
             return
         }
@@ -261,25 +279,35 @@ export default class LeaderboardCommand implements Command {
             })
 
         if (leaderboard && !created) {
-            await interaction.reply(
-                `A leaderboard already exists in ${channelMention(
-                    channel.id
-                )}. If you would like to track additional statistics on this leaderboard please use the ${inlineCode(
-                    '/leaderboard track'
-                )} command`
-            )
+            await interaction.reply({
+                embeds: [
+                    new SimpleEmbed(
+                        `A leaderboard already exists in ${channelMention(
+                            channel.id
+                        )}. If you would like to track additional statistics on this leaderboard please use the ${inlineCode(
+                            '/leaderboard track'
+                        )} command`,
+                        { title: 'Leaderboard Exists', color: 'Orange' }
+                    ).getEmbed()
+                ]
+            })
         } else {
             await bot.createOrUpdateLeaderboardEmbed(leaderboard.uuid)
 
-            await interaction.reply(
-                `A leaderboard has been created in ${channelMention(
-                    channel.id
-                )}. You may use the ${inlineCode(
-                    '/leaderboard track'
-                )} command to add tracked statistics, and the ${inlineCode(
-                    '/leaderboard untrack'
-                )} command to remove tracked statistics`
-            )
+            await interaction.reply({
+                embeds: [
+                    new SimpleEmbed(
+                        `A leaderboard has been created in ${channelMention(
+                            channel.id
+                        )}. You may use the ${inlineCode(
+                            '/leaderboard track'
+                        )} command to add tracked statistics, and the ${inlineCode(
+                            '/leaderboard untrack'
+                        )} command to remove tracked statistics`,
+                        { title: 'Leaderboard Created', color: 'Green' }
+                    ).getEmbed()
+                ]
+            })
         }
     }
 
@@ -289,9 +317,14 @@ export default class LeaderboardCommand implements Command {
     ): Promise<void> {
         const actionConfirm = interaction.options.getBoolean('confirm', true)
         if (!actionConfirm) {
-            await interaction.reply(
-                'Please confirm this destructive action by setting the `confirm` command argument to true'
-            )
+            await interaction.reply({
+                embeds: [
+                    new SimpleEmbed(
+                        'Please confirm this destructive action by setting the `confirm` command argument to true',
+                        { color: 'Orange', title: 'Confirmation Required' }
+                    ).getEmbed()
+                ]
+            })
 
             return
         }
@@ -303,9 +336,14 @@ export default class LeaderboardCommand implements Command {
 
         if (!guildRow || guildRow === null) {
             bot.logger.error('Failed to locate guild in database')
-            await interaction.reply(
-                'An error has occured, please try again later'
-            )
+            await interaction.reply({
+                embeds: [
+                    new SimpleEmbed('An error has occured, please try again later', {
+                        color: 'Red',
+                        title: 'Error'
+                    }).getEmbed()
+                ]
+            })
 
             return
         }
@@ -313,9 +351,14 @@ export default class LeaderboardCommand implements Command {
         const channel = interaction.options.getChannel('channel', true)
         if (channel === null) {
             bot.logger.error('Failed to resolve channel option')
-            await interaction.reply(
-                'An error occured while locating the channel for the leaderboard'
-            )
+            await interaction.reply({
+                embeds: [
+                    new SimpleEmbed(
+                        'An error occured while locating the channel for the leaderboard',
+                        { color: 'Red', title: 'Error' }
+                    ).getEmbed()
+                ]
+            })
 
             return
         }
@@ -328,13 +371,18 @@ export default class LeaderboardCommand implements Command {
         })
 
         if (!leaderboard || leaderboard === null) {
-            await interaction.reply(
-                `The channel ${channelMention(
-                    channel.id
-                )} does not currently have a leaderboard associated with it. If you would like to add a leaderboard please use the ${inlineCode(
-                    '/leaderboard create'
-                )} command`
-            )
+            await interaction.reply({
+                embeds: [
+                    new SimpleEmbed(
+                        `The channel ${channelMention(
+                            channel.id
+                        )} does not currently have a leaderboard associated with it. If you would like to add a leaderboard please use the ${inlineCode(
+                            '/leaderboard create'
+                        )} command`,
+                        { color: 'Orange', title: 'Leaderboard Missing' }
+                    ).getEmbed()
+                ]
+            })
             return
         }
 
@@ -356,11 +404,16 @@ export default class LeaderboardCommand implements Command {
             }
         })
 
-        await interaction.reply(
-            `The leaderboard associated with the channel ${channelMention(
-                channel.id
-            )} has been removed.`
-        )
+        await interaction.reply({
+            embeds: [
+                new SimpleEmbed(
+                    `The leaderboard associated with the channel ${channelMention(
+                        channel.id
+                    )} has been removed.`,
+                    { title: 'Leaderboard Removed', color: 'Green' }
+                ).getEmbed()
+            ]
+        })
     }
 
     private async listTrackers(
@@ -375,9 +428,14 @@ export default class LeaderboardCommand implements Command {
 
         if (!guildRow || guildRow === null) {
             bot.logger.error(`Failed to locate guild in database`)
-            await interaction.reply(
-                'An error has occured, please try again later'
-            )
+            await interaction.reply({
+                embeds: [
+                    new SimpleEmbed('An error has occured, please try again later', {
+                        color: 'Red',
+                        title: 'Error'
+                    }).getEmbed()
+                ]
+            })
 
             return
         }
@@ -392,9 +450,14 @@ export default class LeaderboardCommand implements Command {
         })
 
         if (!leaderboard) {
-            await interaction.reply(
-                'There is no leaderboard for the supplied channel'
-            )
+            await interaction.reply({
+                embeds: [
+                    new SimpleEmbed(
+                        'There is no leaderboard for the supplied channel',
+                        { color: 'Orange', title: 'Leaderboard Missing' }
+                    ).getEmbed()
+                ]
+            })
             return
         }
 
@@ -407,7 +470,14 @@ export default class LeaderboardCommand implements Command {
             })
 
         if (isEmpty(leaderboardTrackers)) {
-            await interaction.reply('There are no trackers on this leaderboard')
+            await interaction.reply({
+                embeds: [
+                    new SimpleEmbed('There are no trackers on this leaderboard', {
+                        color: 'Orange',
+                        title: 'No Trackers'
+                    }).getEmbed()
+                ]
+            })
             return
         }
 
@@ -441,9 +511,14 @@ export default class LeaderboardCommand implements Command {
         })
 
         if (!guildRow || guildRow === null) {
-            await interaction.reply(
-                'An error has occured, please try again later'
-            )
+            await interaction.reply({
+                embeds: [
+                    new SimpleEmbed('An error has occured, please try again later', {
+                        color: 'Red',
+                        title: 'Error'
+                    }).getEmbed()
+                ]
+            })
 
             return
         }
@@ -456,9 +531,14 @@ export default class LeaderboardCommand implements Command {
         })
         if (!leaderboard || leaderboard === null) {
             bot.logger.debug(`Failed to locate leaderboard in database`)
-            await interaction.reply(
-                'There is no leaderboard in the provided channel'
-            )
+            await interaction.reply({
+                embeds: [
+                    new SimpleEmbed('There is no leaderboard in the provided channel', {
+                        color: 'Orange',
+                        title: 'Leaderboard Missing'
+                    }).getEmbed()
+                ]
+            })
             return
         }
 
@@ -471,9 +551,14 @@ export default class LeaderboardCommand implements Command {
         })
         if (!tracker || tracker === null) {
             bot.logger.debug('The requested tracker does not exist')
-            await interaction.reply(
-                'The tracker you have provided does not exist'
-            )
+            await interaction.reply({
+                embeds: [
+                    new SimpleEmbed('The tracker you have provided does not exist', {
+                        color: 'Red',
+                        title: 'Tracker Missing'
+                    }).getEmbed()
+                ]
+            })
             return
         }
 
@@ -503,9 +588,14 @@ export default class LeaderboardCommand implements Command {
         }
 
         if (!created) {
-            await interaction.reply(
-                'The tracker you have provided already exists on this leaderboard'
-            )
+            await interaction.reply({
+                embeds: [
+                    new SimpleEmbed(
+                        'The tracker you have provided already exists on this leaderboard',
+                        { color: 'Orange', title: 'Tracker Exists' }
+                    ).getEmbed()
+                ]
+            })
             return
         }
 
@@ -514,7 +604,14 @@ export default class LeaderboardCommand implements Command {
         )
 
         await bot.createOrUpdateLeaderboardEmbed(leaderboard.uuid)
-        await interaction.reply('The tracker has been added')
+        await interaction.reply({
+            embeds: [
+                new SimpleEmbed('The tracker has been added', {
+                    color: 'Green',
+                    title: 'Tracker Added'
+                }).getEmbed()
+            ]
+        })
     }
 
     private async untrack(
@@ -572,7 +669,14 @@ export default class LeaderboardCommand implements Command {
             })
 
         if (!leaderboardTracker || leaderboardTracker == null) {
-            await interaction.reply('Unable to locate tracker on leaderboard')
+            await interaction.reply({
+                embeds: [
+                    new SimpleEmbed('Unable to locate tracker on leaderboard', {
+                        color: 'Red',
+                        title: 'Tracker Missing'
+                    }).getEmbed()
+                ]
+            })
             return
         }
 
@@ -622,7 +726,14 @@ export default class LeaderboardCommand implements Command {
             )
         }
 
-        await interaction.reply('The tracker has been removed')
+        await interaction.reply({
+            embeds: [
+                new SimpleEmbed('The tracker has been removed', {
+                    color: 'Green',
+                    title: 'Tracker Removed'
+                }).getEmbed()
+            ]
+        })
         await bot.createOrUpdateLeaderboardEmbed(leaderboard.uuid)
     }
 
@@ -677,13 +788,25 @@ export default class LeaderboardCommand implements Command {
 
         if (channel) {
             if (!channel.isTextBased()) {
-                await interaction.reply('Please provide a valid text channel')
+                await interaction.reply({
+                    embeds: [
+                        new SimpleEmbed('Please provide a valid text channel', {
+                            color: 'Red',
+                            title: 'Invalid Channel'
+                        }).getEmbed()
+                    ]
+                })
                 return
             }
 
-            await interaction.reply(
-                `Started leaderboard synchronization for ${channel}`
-            )
+            await interaction.reply({
+                embeds: [
+                    new SimpleEmbed(
+                        `Started leaderboard synchronization for ${channel}`,
+                        { title: 'Synchronization Started', color: 'Blue' }
+                    ).getEmbed()
+                ]
+            })
 
             await bot.synchronizeChannel(channel, interaction)
             return
@@ -692,15 +815,25 @@ export default class LeaderboardCommand implements Command {
         const confirm = interaction.options.getBoolean('confirm') ?? false
 
         if (!confirm) {
-            await interaction.reply(
-                'Confirmation required to resync entire guild'
-            )
+            await interaction.reply({
+                embeds: [
+                    new SimpleEmbed('Confirmation required to resync entire guild', {
+                        color: 'Orange',
+                        title: 'Confirmation Required'
+                    }).getEmbed()
+                ]
+            })
             return
         }
 
-        await interaction.reply(
-            'You have started a leaderboard synchronization. During this time, leaderboards for this guild will be unavailable'
-        )
+        await interaction.reply({
+            embeds: [
+                new SimpleEmbed(
+                    'You have started a leaderboard synchronization. During this time, leaderboards for this guild will be unavailable',
+                    { title: 'Synchronization Started', color: 'Blue' }
+                ).getEmbed()
+            ]
+        })
 
         bot.prepareSynchronizeGuilds(interaction.guildId, interaction)
     }
