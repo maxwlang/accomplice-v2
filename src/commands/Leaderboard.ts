@@ -13,7 +13,8 @@ import {
     ChatInputCommandInteraction,
     SlashCommandBuilder,
     channelMention,
-    inlineCode
+    inlineCode,
+    NonThreadGuildBasedChannel
 } from 'discord.js'
 
 export default class LeaderboardCommand implements Command {
@@ -670,7 +671,9 @@ export default class LeaderboardCommand implements Command {
             return
         }
 
-        const channel = interaction.options.getChannel('channel')
+        const channel = interaction.options.getChannel(
+            'channel'
+        ) as NonThreadGuildBasedChannel | null
 
         if (channel) {
             if (!channel.isTextBased()) {
