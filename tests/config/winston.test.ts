@@ -1,4 +1,3 @@
-import { logLevel as defaultLevel } from '../../src/config/winston'
 
 describe('winston config', () => {
   beforeEach(() => {

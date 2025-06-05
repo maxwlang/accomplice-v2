@@ -15,6 +15,6 @@ describe('emoji utilities', () => {
   })
 
   it('hasEmoji finds known emoji', () => {
-    expect(hasEmoji('smile')).toBe(true)
+    expect(hasEmoji('😀')).toBe(true)
   })
 })

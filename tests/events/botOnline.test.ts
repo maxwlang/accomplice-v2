@@ -1,4 +1,3 @@
-import BotOnline from '../../src/events/BotOnline'
 
 describe('BotOnline event', () => {
   beforeEach(() => {
