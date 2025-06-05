@@ -116,8 +116,55 @@ export default class LeaderboardCommand implements Command {
                 .setName('list')
                 .setDescription('Lists trackers on the guild')
         )
-    // tracker - update
-    // TODO
+        // tracker - update
+        .addSubcommand(subCommand =>
+            subCommand
+                .setName('update')
+                .setDescription('Updates an existing tracker')
+                .addStringOption(option =>
+                    option
+                        .setName('id')
+                        .setDescription('The tracker id to update')
+                        .setRequired(true)
+                )
+                .addStringOption(option =>
+                    option
+                        .setName('reaction')
+                        .setDescription('The reaction to track (emoji or custom emote)')
+                )
+                .addStringOption(option =>
+                    option
+                        .setName('name')
+                        .setDescription('A name associated with the tracker')
+                        .setMaxLength(32)
+                )
+                .addIntegerOption(option =>
+                    option
+                        .setName('length')
+                        .setDescription('How many entries to show on the leaderboard')
+                        .setMinValue(1)
+                )
+                .addBooleanOption(option =>
+                    option
+                        .setName('display-bots')
+                        .setDescription('Should bots be displayed on the leaderboard')
+                )
+                .addBooleanOption(option =>
+                    option
+                        .setName('display-missing-users')
+                        .setDescription('Should users who left the server be displayed')
+                )
+                .addBooleanOption(option =>
+                    option
+                        .setName('recognize-self-reactions')
+                        .setDescription('Should self reactions be counted')
+                )
+                .addBooleanOption(option =>
+                    option
+                        .setName('recognize-bot-reactions')
+                        .setDescription('Should bot reactions be counted')
+                )
+        )
 
     public execute = async ({
         bot,
@@ -137,6 +184,10 @@ export default class LeaderboardCommand implements Command {
 
             case 'list': // Done
                 await this.listTrackers(bot, interaction)
+                break
+
+            case 'update':
+                await this.updateTracker(bot, interaction)
                 break
 
             default:
@@ -415,6 +466,152 @@ export default class LeaderboardCommand implements Command {
                     )} has been destroyed`,
                     { title: 'Tracker Destroyed', color: 'Green' }
                 ).getEmbed()
+            ]
+        })
+    }
+
+    private async updateTracker(
+        bot: Accomplice,
+        interaction: ChatInputCommandInteraction
+    ): Promise<void> {
+        const { Guild, Tracker, LeaderboardTrackers } = bot.sequelize.models
+        const guildRow: Guild | null = await Guild.findOne({
+            where: { snowflake: interaction.guildId }
+        })
+
+        if (!guildRow) {
+            bot.logger.error('Failed to locate guild in database')
+            await interaction.reply({
+                embeds: [
+                    new SimpleEmbed('An error has occured, please try again later', {
+                        color: 'Red',
+                        title: 'Error'
+                    }).getEmbed()
+                ]
+            })
+            return
+        }
+
+        const trackerId = interaction.options.getString('id', true)
+        const tracker: Tracker | null = await Tracker.findOne({
+            where: { uuid: trackerId, guildId: guildRow.uuid }
+        })
+
+        if (!tracker) {
+            await interaction.reply({
+                embeds: [
+                    new SimpleEmbed(
+                        `The tracker ${inlineCode(
+                            trackerId
+                        )} does not exist. If you would like to add a tracker please use the ${inlineCode(
+                            '/tracker create'
+                        )} command`,
+                        { title: 'Tracker Missing', color: 'Red' }
+                    ).getEmbed()
+                ]
+            })
+            return
+        }
+
+        const name = interaction.options.getString('name')
+        const length = interaction.options.getInteger('length')
+        const displayBots = interaction.options.getBoolean('display-bots')
+        const displayMissingUsers = interaction.options.getBoolean('display-missing-users')
+        const recognizeSelfReactions = interaction.options.getBoolean('recognize-self-reactions')
+        const recognizeBotReactions = interaction.options.getBoolean('recognize-bot-reactions')
+        const reaction = interaction.options.getString('reaction')
+
+        const updates: Partial<Tracker> = {}
+
+        if (name) {
+            if (name.length > 32) {
+                await interaction.reply({
+                    embeds: [
+                        new SimpleEmbed(
+                            `The name you specified ${inlineCode(name)} is over the 32 character name limit. Please correct this and try again`,
+                            { color: 'Red', title: 'Invalid Name' }
+                        ).getEmbed()
+                    ]
+                })
+                return
+            }
+            updates.name = name
+        }
+        if (length !== null) updates.length = length
+        if (displayBots !== null) updates.displayBots = displayBots
+        if (displayMissingUsers !== null)
+            updates.displayMissingUsers = displayMissingUsers
+        if (recognizeSelfReactions !== null)
+            updates.recognizeSelfReactions = recognizeSelfReactions
+        if (recognizeBotReactions !== null)
+            updates.recognizeBotReactions = recognizeBotReactions
+
+        if (reaction) {
+            const emoteRegex = /(<a?)?:\\w+:(\\d+)?/g
+            const guildEmojiNumbers = emoteRegex.exec(reaction)?.[2]
+            const isRegularEmoji = hasEmoji(reaction)
+
+            if (isRegularEmoji) {
+                updates.reactionType = ReactionType.Emoji
+                updates.reactionContent = normalizeEmoji(reaction)
+            } else if (guildEmojiNumbers) {
+                const guildEmoji = bot.emojis.cache.get(guildEmojiNumbers)
+                if (guildEmoji) {
+                    updates.reactionType = guildEmoji.animated
+                        ? ReactionType.CustomGIF
+                        : ReactionType.Custom
+                    updates.reactionContent = guildEmoji.id
+                } else {
+                    await interaction.reply({
+                        embeds: [
+                            new SimpleEmbed(
+                                'An issue occured while trying to parse the supplied reaction. Please rename it or try another one. When using custom emotes, for now you must only use emotes available on this server',
+                                { color: 'Red', title: 'Error' }
+                            ).getEmbed()
+                        ]
+                    })
+                    return
+                }
+            } else {
+                await interaction.reply({
+                    embeds: [
+                        new SimpleEmbed(
+                            'The reaction you have supplied is unsupported. Please try another one',
+                            { color: 'Red', title: 'Error' }
+                        ).getEmbed()
+                    ]
+                })
+                return
+            }
+        }
+
+        if (Object.keys(updates).length === 0) {
+            await interaction.reply({
+                embeds: [
+                    new SimpleEmbed('No update options were supplied', {
+                        color: 'Orange',
+                        title: 'Nothing To Update'
+                    }).getEmbed()
+                ]
+            })
+            return
+        }
+
+        await Tracker.update(updates, { where: { uuid: tracker.uuid } })
+
+        const links: LeaderboardTrackers[] = await LeaderboardTrackers.findAll({
+            where: { trackerId: tracker.uuid }
+        })
+        for (const link of links) {
+            await bot.createOrUpdateLeaderboardEmbed(link.leaderboardId)
+        }
+
+        await interaction.reply({
+            embeds: [
+                new SimpleEmbed(`The tracker ${inlineCode(tracker.uuid)} has been updated`, {
+                    color: 'Green',
+                    title: 'Tracker Updated'
+                }).getEmbed()
             ]
         })
     }

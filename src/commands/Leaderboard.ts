@@ -77,6 +77,36 @@ export default class LeaderboardCommand implements Command {
                         )
                 )
         )
+        // Leaderboard - update
+        .addSubcommand(subCommand =>
+            subCommand
+                .setName('update')
+                .setDescription('Updates a leaderboard configuration')
+                .addChannelOption(option =>
+                    option
+                        .setName('channel')
+                        .setDescription(
+                            'The channel where the leaderboard exists'
+                        )
+                        .setRequired(true)
+                )
+                .addBooleanOption(option =>
+                    option
+                        .setName('delete-user-messages')
+                        .setDescription(
+                            'Should Accomplice delete user messages in the channel?'
+                        )
+                )
+                .addIntegerOption(option =>
+                    option
+                        .setName('default-tracker-timeout')
+                        .setDescription(
+                            'The default tracker timeout in seconds'
+                        )
+                        .setMinValue(120)
+                        .setMaxValue(1800)
+                )
+        )
         // Leaderboard - track
         .addSubcommand(subCommand =>
             subCommand
@@ -186,6 +216,10 @@ export default class LeaderboardCommand implements Command {
 
             case 'destroy': // Done
                 await this.destroyLeaderboard(bot, interaction)
+                break
+
+            case 'update':
+                await this.updateLeaderboard(bot, interaction)
                 break
 
             case 'trackers': // Done
@@ -415,6 +449,101 @@ export default class LeaderboardCommand implements Command {
                     )} has been removed.`,
                     { title: 'Leaderboard Removed', color: 'Green' }
                 ).getEmbed()
+            ]
+        })
+    }
+
+    private async updateLeaderboard(
+        bot: Accomplice,
+        interaction: ChatInputCommandInteraction
+    ): Promise<void> {
+        const { Guild, Leaderboard } = bot.sequelize.models
+        const guildRow: Guild | null = await Guild.findOne({
+            where: { snowflake: interaction.guildId }
+        })
+
+        if (!guildRow) {
+            bot.logger.error('Failed to locate guild in database')
+            await interaction.reply({
+                embeds: [
+                    new SimpleEmbed('An error has occured, please try again later', {
+                        color: 'Red',
+                        title: 'Error'
+                    }).getEmbed()
+                ]
+            })
+
+            return
+        }
+
+        const channel = interaction.options.getChannel('channel', true)
+        if (!channel) {
+            bot.logger.error('Failed to resolve channel option')
+            await interaction.reply({
+                embeds: [
+                    new SimpleEmbed(
+                        'An error occured while locating the channel for the leaderboard',
+                        { color: 'Red', title: 'Error' }
+                    ).getEmbed()
+                ]
+            })
+            return
+        }
+
+        const leaderboard: Leaderboard | null = await Leaderboard.findOne({
+            where: { guildId: guildRow.uuid, channelSnowflake: channel.id }
+        })
+
+        if (!leaderboard) {
+            await interaction.reply({
+                embeds: [
+                    new SimpleEmbed(
+                        `The channel ${channelMention(
+                            channel.id
+                        )} does not currently have a leaderboard associated with it. If you would like to add a leaderboard please use the ${inlineCode(
+                            '/leaderboard create'
+                        )} command`,
+                        { color: 'Orange', title: 'Leaderboard Missing' }
+                    ).getEmbed()
+                ]
+            })
+            return
+        }
+
+        const deleteUserMessages = interaction.options.getBoolean(
+            'delete-user-messages'
+        )
+        const defaultTrackerTimeout = interaction.options.getInteger(
+            'default-tracker-timeout'
+        )
+
+        const updates: Partial<Leaderboard> = {}
+        if (deleteUserMessages !== null) updates.deleteUserMessages = deleteUserMessages
+        if (defaultTrackerTimeout !== null)
+            updates.defaultTrackerTimeout = defaultTrackerTimeout
+
+        if (Object.keys(updates).length === 0) {
+            await interaction.reply({
+                embeds: [
+                    new SimpleEmbed('No update options were supplied', {
+                        color: 'Orange',
+                        title: 'Nothing To Update'
+                    }).getEmbed()
+                ]
+            })
+            return
+        }
+
+        await Leaderboard.update(updates, { where: { uuid: leaderboard.uuid } })
+
+        await bot.createOrUpdateLeaderboardEmbed(leaderboard.uuid)
+
+        await interaction.reply({
+            embeds: [
+                new SimpleEmbed('The leaderboard has been updated', {
+                    color: 'Green',
+                    title: 'Leaderboard Updated'
+                }).getEmbed()
             ]
         })
     }
