@@ -11,11 +11,19 @@ describe('ReactionRemoved event', () => {
         const messageReaction = {
             partial: false,
             emoji: { name: '😀', id: null, animated: false },
-            message: { author: { id: 'u1', bot: false }, id: 'm1', guildId: 'g1' }
+            message: {
+                author: { id: 'u1', bot: false },
+                id: 'm1',
+                guildId: 'g1'
+            }
         } as any
         const reactor = { id: 'u2', bot: false } as any
-        const Guild = { findOrCreate: jest.fn().mockResolvedValue([{ uuid: 'gid' }, false]) }
-        const User = { findOrCreate: jest.fn().mockResolvedValue([{ uuid: 'uid' }, false]) }
+        const Guild = {
+            findOrCreate: jest.fn().mockResolvedValue([{ uuid: 'gid' }, false])
+        }
+        const User = {
+            findOrCreate: jest.fn().mockResolvedValue([{ uuid: 'uid' }, false])
+        }
         const GuildUser = { create: jest.fn() }
         const Reaction = {
             findOne: jest.fn().mockResolvedValue({ uuid: 'r1' }),

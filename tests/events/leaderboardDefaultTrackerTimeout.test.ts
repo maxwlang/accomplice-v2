@@ -16,11 +16,20 @@ describe('LeaderboardDefaultTrackerTimeout event', () => {
             values: ['track2'],
             deferUpdate
         } as any
-        const findOneLB = jest.fn().mockResolvedValue({ uuid: 'lb1', defaultTrackerTimeout: 1 })
-        const findOneTracker = jest.fn().mockResolvedValue({ trackerId: 'track1' })
+        const findOneLB = jest
+            .fn()
+            .mockResolvedValue({ uuid: 'lb1', defaultTrackerTimeout: 1 })
+        const findOneTracker = jest
+            .fn()
+            .mockResolvedValue({ trackerId: 'track1' })
         const timers = new Map<string, NodeJS.Timeout>()
         const bot = {
-            sequelize: { models: { Leaderboard: { findOne: findOneLB }, LeaderboardTrackers: { findOne: findOneTracker } } },
+            sequelize: {
+                models: {
+                    Leaderboard: { findOne: findOneLB },
+                    LeaderboardTrackers: { findOne: findOneTracker }
+                }
+            },
             timers,
             logger: { debug: jest.fn() },
             createOrUpdateLeaderboardEmbed: jest.fn()
@@ -28,7 +37,10 @@ describe('LeaderboardDefaultTrackerTimeout event', () => {
         await event.execute({ args: [interaction], bot })
         expect(timers.size).toBe(1)
         await jest.advanceTimersByTimeAsync(1000)
-        expect(bot.createOrUpdateLeaderboardEmbed).toHaveBeenCalledWith('lb1', 'track1')
+        expect(bot.createOrUpdateLeaderboardEmbed).toHaveBeenCalledWith(
+            'lb1',
+            'track1'
+        )
         expect(deferUpdate).toHaveBeenCalled()
     })
 })

@@ -347,7 +347,8 @@ export default class DebugCommand implements Command {
         const embedName = basename(
             interaction.options.getString('embed-name', true)
         )
-        const constructorArgsRaw = interaction.options.getString('constructor-args')
+        const constructorArgsRaw =
+            interaction.options.getString('constructor-args')
         const embedArgsRaw = interaction.options.getString('embed-args')
 
         let constructorArgs: unknown | unknown[]
@@ -378,8 +379,8 @@ export default class DebugCommand implements Command {
             const embedInstance: Embed = Array.isArray(constructorArgs)
                 ? new EmbedClass(...constructorArgs)
                 : constructorArgsRaw
-                ? new EmbedClass(constructorArgs)
-                : new EmbedClass()
+                  ? new EmbedClass(constructorArgs)
+                  : new EmbedClass()
             const embed = await embedInstance.getEmbed(embedArgs)
             await interaction.reply({ embeds: [embed] })
         } catch (e) {

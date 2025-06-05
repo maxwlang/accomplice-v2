@@ -18,7 +18,7 @@
     "dev": "yarn clean && yarn lint && yarn build && yarn start",
     "clean": "rimraf dist/",
     "build": "tsc",
-    "lint": "eslint . --ext .ts",
+    "lint": "eslint . --ext .ts --fix",
     "test": "jest",
     "migrate": "sequelize-cli db:migrate --env production --config ./src/sequelize/config/sequelize.json --seeders-path ./src/sequelize/seeders --models-path ./src/sequelize/models --migrations-path ./src/sequelize/migrations"
   },
