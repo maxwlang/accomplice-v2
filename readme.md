@@ -17,6 +17,7 @@ https://trello.com/b/3e2lA442/accomplice-v2
 - /leaderboard - Leaderboards display the top reacted users in your guild using Trackers. Leaderboards are different from starboards.
     - create <channel> (delete-user-messages?, default-tracker-timeout?) - Creates a Leaderboard.
     - destroy <channel> <confirm> - Destroys a Leaderboard.
+    - update <channel> (delete-user-messages?, default-tracker-timeout?) - Updates a Leaderboard.
     - track <channel> <tracker-id> (is-default?) - Assigns a Tracker to a Leaderboard. You may have a Tracker on multiple Leaderboards and Starboards.
     - untrack <channel> <tracker-id> - Removes a Tracker from a Leaderboard.
     - trackers <channel> - Shows all Trackers associated with a Leaderboard.
@@ -26,6 +27,7 @@ https://trello.com/b/3e2lA442/accomplice-v2
     - create - Creates a reaction Tracker.
     - destroy - Destroys a reaction Tracker and removes it from all Leaderboards and Starboards.
     - list - Shows all Trackers on the guild.
+    - update - Updates a reaction Tracker.
 
 ## Commands (Incomplete)
 - /leaderboard
