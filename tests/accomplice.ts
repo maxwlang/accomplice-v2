@@ -1,4 +1,4 @@
-import Accomplice from '../../src/accomplice'
+import Accomplice from '../src/accomplice'
 
 describe('cleanupLeftGuilds', () => {
     it('removes guilds not in fetch result', async () => {
