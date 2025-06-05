@@ -11,6 +11,7 @@ export REDIS_ENABLED=false
 export REDIS_URL=redis://localhost:6379
 export REDIS_PASSWORD=redis
 export REDIS_PREFIX=accomplice_
+export MESSAGE_SYNC_LIMIT=50000
 
 export DB_DIALECT="mariadb"
 export DB_HOST="10.0.20.10"

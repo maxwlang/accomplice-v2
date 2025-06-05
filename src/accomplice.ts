@@ -43,6 +43,7 @@ import {
     redisPrefix,
     redisURL
 } from './config/redis'
+import { messageSyncLimit } from './config/sync'
 
 export default class Accomplice extends Client {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -500,7 +501,7 @@ export default class Accomplice extends Client {
             const channelTaskChunks = []
             const taskChunkSize = 3 // How many channels to process at once
             let chunkProgress = 0 // How many chunks have been processed
-            const messageLimit = 50_000 // How far back we will go in each channel
+            const messageLimit = messageSyncLimit // How far back we will go in each channel
 
             while (channels.length > 0) {
                 channelTaskChunks.push(channels.splice(0, taskChunkSize))
@@ -698,6 +699,23 @@ export default class Accomplice extends Client {
                 )
                 console.log(e)
             }
+        }
+    }
+
+    public async synchronizeChannel(
+        channel: NonThreadGuildBasedChannel,
+        interaction?: ChatInputCommandInteraction
+    ): Promise<void> {
+        const messageLimit = messageSyncLimit
+
+        this.logger.info(
+            `Syncing channel "${channel.guild.name}:${channel.name}" (${channel.guildId}:${channel.id})`
+        )
+
+        await this.updateReactionsForChannel(channel, messageLimit)
+
+        if (interaction) {
+            await interaction.followUp('finished')
         }
     }
 
