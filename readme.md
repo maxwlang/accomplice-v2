@@ -10,6 +10,8 @@ https://trello.com/b/3e2lA442/accomplice-v2
     - clear-timer - Clears a timer from memory and stops it.
     - eval - Evaluates a string of code.
     - eval-sql - Evaluates a string of SQL code.
+    - list-embeds - Lists all embeds by name.
+    - show-embed <embed-name> (constructor-args?, embed-args?) - Shows an embed with optional JSON arguments.
     - show-stats - Shows bot stats.
 - /invite - Makes the bot reply with an invite link and correct permissions.
 - /leaderboard - Leaderboards display the top reacted users in your guild using Trackers. Leaderboards are different from starboards.
